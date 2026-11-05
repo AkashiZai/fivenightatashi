@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Five Nights at Ashi</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-drag: none; }
+  body {
+    background: #000;
+    color: #fff;
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #game-wrap {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    max-width: 100vw;
+    max-height: 100vh;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,0,0,0.95);
+    border: 1px solid #181818;
+  }
+  /* Scanlines & CRT Vignette */
+  .crt-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 90;
+    background:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0px, rgba(0,0,0,0.18) 1px, transparent 1px, transparent 3px),
+      radial-gradient(circle at center, transparent 58%, rgba(0,0,0,0.72) 100%);
+  }
+  #static-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 45;
+    opacity: 0;
+    mix-blend-mode: screen;
+  }
+
+  /* TITLE SCREEN */
+  #title-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 60;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 48px 68px;
+  }
+  #title-bg-char {
+    position: absolute;
+    right: 60px;
+    bottom: -30px;
+    height: 740px;
+    opacity: 0.72;
+    filter: contrast(1.55) brightness(0.62) saturate(0.35);
+    pointer-events: none;
+    transition: filter 0.05s;
+  }
+  .title-header {
+    position: relative;
+    z-index: 5;
+  }
+  .title-header h1 {
+    font-size: 52px;
+    line-height: 1.08;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 3px 3px 0 #000, 0 0 18px rgba(255,255,255,0.25);
+  }
+  .stars-row {
+    margin-top: 14px;
+    font-size: 36px;
+    color: #ffd700;
+    letter-spacing: 8px;
+    text-shadow: 0 0 14px rgba(255,215,0,0.7);
+  }
+  .menu-list {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .menu-btn {
+    font-size: 30px;
+    color: #ddd;
+    cursor: pointer;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: fit-content;
+    transition: color 0.1s, transform 0.1s;
+  }
+  .menu-btn:hover {
+    color: #fff;
+    transform: translateX(6px);
+    text-shadow: 0 0 10px #fff;
+  }
+  .menu-btn .arrow { visibility: hidden; }
+  .menu-btn:hover .arrow { visibility: visible; }
+  .night-select-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .night-pill {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid #555;
+    color: #ccc;
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .night-pill:hover, .night-pill.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+  }
+  .title-footer {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #777;
+  }
+
+  /* CUSTOM NIGHT MODAL */
+  #custom-night-modal {
+    position: absolute;
+    inset: 0;
+    z-index: 75;
+    background: rgba(0,0,0,0.96);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px;
+  }
+  #custom-night-modal h2 {
+    font-size: 42px;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+  }
+  .cn-sub {
+    color: #aaa;
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+  .cn-grid {
+    display: flex;
+    gap: 28px;
+    margin-bottom: 32px;
+  }
+  .cn-card {
+    width: 210px;
+    background: #0d0d0d;
+    border: 2px solid #444;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cn-card img {
+    width: 140px;
+    height: 170px;
+    object-fit: cover;
+    object-position: top center;
+    border: 1px solid #333;
+    background: #050508;
+    margin-bottom: 10px;
+  }
+  .cn-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .cn-role {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .cn-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .cn-btn {
+    width: 34px;
+    height: 34px;
+    background: #222;
+    border: 1px solid #666;
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .cn-btn:hover { background: #fff; color: #000; }
+  .cn-val {
+    font-size: 28px;
+    width: 44px;
+    text-align: center;
+    font-weight: bold;
+  }
+  .cn-actions {
+    display: flex;
+    gap: 20px;
+  }
+  .cn-action-btn {
+    padding: 12px 32px;
+    font-size: 22px;
+    font-family: inherit;
+    background: #111;
+    border: 2px solid #fff;
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 2px;
+  }
+  .cn-action-btn:hover { background: #fff; color: #000; }
+
+  /* NEWSPAPER / NIGHT INTRO / 6AM / GAME OVER SCREENS */
+  .fullscreen-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 70;
+    background: #000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  #newspaper-card {
+    width: 780px;
+    background: #d8d2c5;
+    color: #111;
+    padding: 36px 48px;
+    border: 4px double #222;
+    box-shadow: 0 0 80px rgba(0,0,0,0.9);
+    font-family: Georgia, 'Times New Roman', serif;
+    text-align: left;
+    transform: rotate(-1deg);
+  }
+  #newspaper-card h2 {
+    font-size: 48px;
+    border-bottom: 3px solid #111;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .np-body {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+  .np-body img {
+    width: 200px;
+    height: 220px;
+    object-fit: cover;
+    object-position: top;
+    filter: grayscale(1) contrast(1.4);
+    border: 2px solid #222;
+  }
+  .np-text h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  .np-text p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  /* THE OFFICE VIEWPORT (1600x720 pan inside 1280x720) */
+  #office-viewport {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 10;
+  }
+  #office-world {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1600px;
+    height: 720px;
+    will-change: transform;
+  }
+  #office-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1600px;
+    height: 720px;
+    object-fit: cover;
+    pointer-events: none;
+  }
+  #desk-fan {
+    position: absolute;
+    left: 780px;
+    top: 403px;
+    width: 138px;
+    height: 196px;
+    pointer-events: none;
+    z-index: 3;
+  }
+  /* Security Doors */
+  .sec-door {
+    position: absolute;
+    top: 0;
+    height: 720px;
+    background:
+      repeating-linear-gradient(180deg, #2a2d32 0px, #2a2d32 28px, #191b1e 28px, #191b1e 34px, #353940 34px, #353940 38px);
+    border-left: 4px solid #111;
+    border-right: 4px solid #111;
+    box-shadow: inset 0 0 35px rgba(0,0,0,0.85);
+    transform: translateY(-100%);
+    transition: transform 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+    z-index: 4;
+  }
+  .sec-door::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 26px;
+    background: repeating-linear-gradient(45deg, #d4a017 0px, #d4a017 16px, #111 16px, #111 32px);
+    border-top: 2px solid #000;
+  }
+  .sec-door.closed {
+    transform: translateY(0%);
+  }
+  #door-left {
+    left: 72px;
+    width: 178px;
+  }
+  #door-right {
+    left: 1270px;
+    width: 182px;
+  }
+
+  /* Door & Light Button Panels */
+  .door-panel {
+    position: absolute;
+    width: 92px;
+    height: 247px;
+    z-index: 6;
+  }
+  #panel-left {
+    left: 6px;
+    top: 260px;
+  }
+  #panel-right {
+    left: 1498px;
+    top: 260px;
+  }
+  .door-panel img {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .panel-hit-door {
+    position: absolute;
+    top: 22px;
+    left: 10px;
+    width: 72px;
+    height: 95px;
+    cursor: pointer;
+  }
+  .panel-hit-light {
+    position: absolute;
+    top: 125px;
+    left: 10px;
+    width: 72px;
+    height: 95px;
+    cursor: pointer;
+  }
+  /* Poster Nose Honk Easter Egg */
+  #nose-hitbox {
+    position: absolute;
+    left: 670px;
+    top: 235px;
+    width: 26px;
+    height: 26px;
+    cursor: pointer;
+    z-index: 7;
+  }
+  /* Golden Freddy in Office */
+  #golden-office-sprite {
+    position: absolute;
+    left: 590px;
+    top: 190px;
+    height: 540px;
+    z-index: 5;
+    display: none;
+    filter: contrast(1.45) brightness(0.75) sepia(0.55) hue-rotate(-10deg) drop-shadow(0 0 25px rgba(0,0,0,0.95));
+    pointer-events: none;
+  }
+
+  /* CAMERA MONITOR VIEW */
+  #cam-screen {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    background: #000;
+    display: none;
+    overflow: hidden;
+  }
+  #cam-feed-wrap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1600px;
+    height: 720px;
+  }
+  #cam-feed-img {
+    width: 1600px;
+    height: 720px;
+    object-fit: cover;
+  }
+  #cam-disabled-msg {
+    position: absolute;
+    top: 160px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 32px;
+    letter-spacing: 3px;
+    color: #ddd;
+    display: none;
+    z-index: 32;
+  }
+  .cam-border-frame {
+    position: absolute;
+    inset: 16px;
+    border: 2px solid rgba(255,255,255,0.45);
+    pointer-events: none;
+    z-index: 35;
+  }
+  .cam-rec-dot {
+    position: absolute;
+    top: 38px;
+    left: 44px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 24px;
+    z-index: 36;
+  }
+  .red-circle {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #e00;
+    box-shadow: 0 0 10px #f00;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+  #cam-room-title {
+    position: absolute;
+    bottom: 430px;
+    right: 95px;
+    font-size: 28px;
+    letter-spacing: 2px;
+    z-index: 36;
+    text-shadow: 2px 2px 0 #000;
+  }
+
+  /* FNaF 1 Camera Map (Bottom Right) */
+  #cam-map-container {
+    position: absolute;
+    bottom: 52px;
+    right: 38px;
+    width: 400px;
+    height: 370px;
+    z-index: 38;
+  }
+  #cam-map-svg {
+    width: 100%;
+    height: 100%;
+    opacity: 0.85;
+  }
+  .cam-btn {
+    position: absolute;
+    width: 58px;
+    height: 36px;
+    background: #2b2b2b;
+    border: 2px solid #aaa;
+    color: #fff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 1.05;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2px 5px;
+    text-align: left;
+  }
+  .cam-btn.active {
+    background: #55aa22;
+    color: #fff;
+    border-color: #fff;
+    animation: camPulse 1.2s infinite;
+  }
+  @keyframes camPulse {
+    0%, 100% { background: #55aa22; }
+    50% { background: #3b7a16; }
+  }
+  /* Radar dots when AI Debug Radar is toggled on */
+  .radar-tags {
+    position: absolute;
+    top: -14px;
+    right: 0;
+    display: flex;
+    gap: 2px;
+    pointer-events: none;
+  }
+  .r-dot {
+    font-size: 10px;
+    padding: 0 3px;
+    border-radius: 2px;
+    font-weight: bold;
+    color: #000;
+  }
+
+  /* HUD (Always visible during gameplay) */
+  #hud-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 40;
+    display: none;
+  }
+  .hud-top-right {
+    position: absolute;
+    top: 26px;
+    right: 38px;
+    text-align: right;
+    text-shadow: 2px 2px 0 #000;
+  }
+  #hud-time {
+    font-size: 44px;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+  #hud-night {
+    font-size: 22px;
+    margin-top: 2px;
+  }
+  .hud-bottom-left {
+    position: absolute;
+    bottom: 32px;
+    left: 38px;
+    text-shadow: 2px 2px 0 #000;
+  }
+  #hud-power {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+  .usage-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 22px;
+  }
+  .usage-bars {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 28px;
+  }
+  .u-bar {
+    width: 18px;
+    height: 24px;
+    border: 1px solid #444;
+    background: transparent;
+  }
+  .u-bar.on-1 { background: #2ecc40; }
+  .u-bar.on-2 { background: #2ecc40; }
+  .u-bar.on-3 { background: #ffdc00; }
+  .u-bar.on-4 { background: #ff851b; }
+  .u-bar.on-5 { background: #ff4136; }
+
+  /* Monitor Toggle Bar (Bottom Center) */
+  #monitor-toggle-bar {
+    position: absolute;
+    bottom: 10px;
+    left: 310px;
+    width: 560px;
+    height: 40px;
+    background: rgba(180, 180, 180, 0.22);
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    letter-spacing: 6px;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: background 0.15s;
+  }
+  #monitor-toggle-bar:hover {
+    background: rgba(255, 255, 255, 0.38);
+    color: #fff;
+  }
+
+  /* Phone Guy Mute Call Button & Helper Toolbar */
+  #mute-call-btn {
+    position: absolute;
+    top: 24px;
+    left: 34px;
+    background: rgba(40, 40, 40, 0.85);
+    border: 2px solid #aaa;
+    color: #fff;
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    pointer-events: auto;
+    display: none;
+  }
+  #phone-subtitles {
+    position: absolute;
+    top: 66px;
+    left: 34px;
+    max-width: 520px;
+    background: rgba(0, 0, 0, 0.75);
+    border-left: 3px solid #55aa22;
+    padding: 8px 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    color: #ccc;
+    display: none;
+  }
+  #dev-toolbar {
+    position: absolute;
+    top: 24px;
+    left: 180px;
+    display: flex;
+    gap: 8px;
+    pointer-events: auto;
+  }
+  .tool-pill {
+    background: rgba(0,0,0,0.7);
+    border: 1px solid #555;
+    color: #aaa;
+    font-family: inherit;
+    font-size: 12px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  .tool-pill:hover, .tool-pill.active {
+    border-color: #fff;
+    color: #fff;
+    background: rgba(50,50,50,0.9);
+  }
+  #ai-debug-box {
+    position: absolute;
+    top: 60px;
+    left: 180px;
+    background: rgba(0,0,0,0.85);
+    border: 1px solid #444;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #0f0;
+    display: none;
+    pointer-events: none;
+  }
+
+  /* Hallucination / IT'S ME Flash Overlay */
+  #hallucination-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 52;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    pointer-events: none;
+  }
+  #hallucination-overlay img {
+    height: 720px;
+    filter: contrast(2.2) brightness(0.8) grayscale(0.5);
+  }
+  #hallucination-overlay h1 {
+    position: absolute;
+    font-size: 96px;
+    color: #fff;
+    letter-spacing: 12px;
+    text-shadow: 0 0 20px #f00;
+  }
+
+  /* JUMPSCARE LAYER */
+  #jumpscare-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 80;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  #jumpscare-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.45;
+  }
+  #jumpscare-char {
+    position: relative;
+    height: 820px;
+    z-index: 2;
+    filter: contrast(1.55) brightness(0.95);
+    animation: scareShake 0.045s infinite alternate;
+  }
+  @keyframes scareShake {
+    0% { transform: scale(1.18) translate(-18px, 12px) rotate(-4deg); }
+    50% { transform: scale(1.42) translate(22px, -16px) rotate(4deg); }
+    100% { transform: scale(1.55) translate(-12px, -22px) rotate(-3deg); }
+  }
+</style>
+</head>
+<body>
+
+<div id="game-wrap">
+  <div class="crt-overlay"></div>
+  <canvas id="static-canvas" width="640" height="360"></canvas>
+
+  <!-- TITLE SCREEN -->
+  <div id="title-screen">
+    <img id="title-bg-char" src="assets/sprites/freddy.png" alt="Freddy">
+    <div class="title-header">
+      <h1>Five<br>Nights<br>at<br>Ashi</h1>
+      <div class="stars-row" id="title-stars"></div>
+    </div>
+
+    <div class="menu-list">
+      <div class="menu-btn" onclick="startNewGame()">
+        <span class="arrow">&gt;&gt;</span> New Game
+      </div>
+      <div class="menu-btn" onclick="continueGame()">
+        <span class="arrow">&gt;&gt;</span> Continue <span id="continue-night-label" style="font-size:18px;color:#888;margin-left:8px;">(Night 1)</span>
+      </div>
+      <div class="menu-btn" onclick="startSelectedNight(6)">
+        <span class="arrow">&gt;&gt;</span> 6th Night
+      </div>
+      <div class="menu-btn" onclick="openCustomNight()">
+        <span class="arrow">&gt;&gt;</span> Custom Night
+      </div>
+
+      <div style="margin-top:10px;font-size:13px;color:#888;">QUICK SELECT NIGHT (100% ORIGINAL FNAF 1 AI):</div>
+      <div class="night-select-row">
+        <button class="night-pill" onclick="startSelectedNight(1)">Night 1 (0/0/0/0)</button>
+        <button class="night-pill" onclick="startSelectedNight(2)">Night 2 (0/3/1/1)</button>
+        <button class="night-pill" onclick="startSelectedNight(3)">Night 3 (1/0/5/2)</button>
+        <button class="night-pill" onclick="startSelectedNight(4)">Night 4 (2/2/4/6)</button>
+        <button class="night-pill" onclick="startSelectedNight(5)">Night 5 (3/5/7/5)</button>
+        <button class="night-pill" onclick="startSelectedNight(6)">Night 6 (4/10/12/16)</button>
+        <button class="night-pill" onclick="openCustomNight()">Night 7 (Custom)</button>
+      </div>
+    </div>
+
+    <div class="title-footer">
+      <span>Controls: Mouse Pan | Doors: [Q]/[E] | Lights: [Z]/[C] | Monitor: [Space]/[S]</span>
+      <span>© Five Nights at Ashi — 100% Authentic FNaF 1 Engine</span>
+    </div>
+  </div>
+
+  <!-- CUSTOM NIGHT (NIGHT 7) MODAL -->
+  <div id="custom-night-modal">
+    <h2>CUSTOMIZE NIGHT</h2>
+    <div class="cn-sub">Set A.I. Levels (0–20). Tip: Try 20/20/20/20 Mode or the classic 1/9/8/7 Easter Egg!</div>
+    <div class="cn-grid">
+      <div class="cn-card">
+        <img src="assets/sprites/freddy.png" alt="Freddy">
+        <div class="cn-name">FREDDY</div>
+        <div class="cn-role">Stalks Right Hall (3.02s tick)</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('freddy', -1)">&lt;</button>
+          <div class="cn-val" id="cn-freddy">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('freddy', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets/sprites/bonnie.png" alt="Bonnie">
+        <div class="cn-name">BONNIE</div>
+        <div class="cn-role">Left Side Attacker (4.97s tick)</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('bonnie', -1)">&lt;</button>
+          <div class="cn-val" id="cn-bonnie">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('bonnie', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets/sprites/chica.png" alt="Chica">
+        <div class="cn-name">CHICA</div>
+        <div class="cn-role">Right Window / Pizza (4.98s tick)</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('chica', -1)">&lt;</button>
+          <div class="cn-val" id="cn-chica">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('chica', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card">
+        <img src="assets/sprites/foxy.png" alt="Foxy">
+        <div class="cn-name">FOXY</div>
+        <div class="cn-role">Pirate Cove Sprinter (5.01s tick)</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('foxy', -1)">&lt;</button>
+          <div class="cn-val" id="cn-foxy">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('foxy', 1)">&gt;</button>
+        </div>
+      </div>
+    </div>
+    <div class="cn-actions">
+      <button class="cn-action-btn" onclick="closeCustomNight()">BACK</button>
+      <button class="cn-action-btn" onclick="setAllCustomAI(20)">20/20/20/20</button>
+      <button class="cn-action-btn" onclick="launchCustomNight()">READY &gt;&gt;</button>
+    </div>
+  </div>
+
+  <!-- NEWSPAPER OVERLAY -->
+  <div id="newspaper-screen" class="fullscreen-overlay" onclick="skipNewspaper()">
+    <div id="newspaper-card">
+      <h2>THE ASHI TIMES</h2>
+      <div class="np-body">
+        <img src="assets/sprites/freddy.png" alt="Help Wanted">
+        <div class="np-text">
+          <h3>HELP WANTED — ASHI'S PIZZERIA</h3>
+          <p>Family pizzeria looking for security guard to work the nightshift from <b>12:00 AM to 6:00 AM</b>.</p>
+          <p>Monitor cameras, ensure safety of equipment and animatronic characters. Not responsible for injury/dismemberment.</p>
+          <p><b>$120.00 a week.</b> To apply call: 1-888-ASHI-PIZZA.</p>
+        </div>
+      </div>
+      <div style="text-align:right;font-size:13px;margin-top:12px;color:#444;">(Click anywhere to continue)</div>
+    </div>
+  </div>
+
+  <!-- NIGHT INTRO OVERLAY -->
+  <div id="night-intro-screen" class="fullscreen-overlay">
+    <div style="font-size:48px;letter-spacing:3px;margin-bottom:12px;">12:00 AM</div>
+    <div id="night-intro-text" style="font-size:42px;letter-spacing:2px;">1st Night</div>
+  </div>
+
+  <!-- 6 AM VICTORY OVERLAY -->
+  <div id="victory-screen" class="fullscreen-overlay">
+    <div id="victory-clock" style="font-size:92px;font-weight:bold;letter-spacing:6px;">5:00 AM</div>
+    <div id="victory-sub" style="font-size:24px;color:#aaa;margin-top:20px;opacity:0;transition:opacity 1s;"></div>
+  </div>
+
+  <!-- GAME OVER OVERLAY -->
+  <div id="gameover-screen" class="fullscreen-overlay" onclick="returnToMenu()">
+    <img src="assets/sprites/golden.png" style="height:440px;filter:grayscale(0.7) contrast(1.6) brightness(0.5);margin-bottom:18px;" alt="Game Over">
+    <div style="font-size:54px;color:#d00;letter-spacing:6px;text-shadow:0 0 20px #f00;">GAME OVER</div>
+    <div id="gameover-reason" style="font-size:20px;color:#bbb;margin-top:10px;"></div>
+    <div style="font-size:15px;color:#777;margin-top:24px;">Click anywhere to return to Title Screen</div>
+  </div>
+
+  <!-- THE OFFICE VIEWPORT -->
+  <div id="office-viewport">
+    <div id="office-world">
+      <img id="office-bg" src="assets/cams/office_normal.jpg" alt="Office">
+      <img id="desk-fan" src="assets/bg/fan.gif" alt="Fan">
+
+      <!-- Left & Right Security Doors -->
+      <div id="door-left" class="sec-door"></div>
+      <div id="door-right" class="sec-door"></div>
+
+      <!-- Left Door/Light Panel -->
+      <div id="panel-left" class="door-panel">
+        <img id="panel-left-img" src="assets/bg/btn_l_off.png" alt="Left Buttons">
+        <div class="panel-hit-door" onclick="toggleDoor('left')" title="Left Door [Q]"></div>
+        <div class="panel-hit-light" onclick="toggleLight('left')" title="Left Hall Light [Z]"></div>
+      </div>
+
+      <!-- Right Door/Light Panel -->
+      <div id="panel-right" class="door-panel">
+        <img id="panel-right-img" src="assets/bg/btn_r_off.png" alt="Right Buttons">
+        <div class="panel-hit-door" onclick="toggleDoor('right')" title="Right Door [E]"></div>
+        <div class="panel-hit-light" onclick="toggleLight('right')" title="Right Hall Light [C]"></div>
+      </div>
+
+      <!-- Poster Nose Honk Hitbox -->
+      <div id="nose-hitbox" onclick="honkNose()" title="Honk!"></div>
+
+      <!-- Golden Freddy Office Apparition -->
+      <img id="golden-office-sprite" src="assets/sprites/golden.png" alt="Golden Freddy">
+    </div>
+  </div>
+
+  <!-- SECURITY CAMERA MONITOR -->
+  <div id="cam-screen">
+    <div id="cam-feed-wrap">
+      <img id="cam-feed-img" src="assets/cams/cam1a_all.jpg" alt="Camera Feed">
+    </div>
+    <div id="cam-disabled-msg">
+      -CAMERA DISABLED-<br>
+      <span style="font-size:20px;color:#aaa;">AUDIO ONLY</span>
+    </div>
+    <div class="cam-border-frame"></div>
+    <div class="cam-rec-dot">
+      <div class="red-circle"></div>
+      <span>REC</span>
+    </div>
+    <div id="cam-room-title">Show Stage</div>
+
+    <!-- FNaF 1 Camera Map & 11 Camera Buttons -->
+    <div id="cam-map-container">
+      <svg id="cam-map-svg" viewBox="0 0 400 370" fill="none" stroke="#fff" stroke-width="2">
+        <!-- Show Stage -->
+        <rect x="115" y="12" width="120" height="42"/>
+        <!-- Dining Area -->
+        <rect x="75" y="54" width="200" height="115"/>
+        <!-- Backstage -->
+        <rect x="20" y="68" width="55" height="65"/>
+        <!-- Pirate Cove -->
+        <rect x="42" y="138" width="33" height="52"/>
+        <!-- Restrooms -->
+        <rect x="275" y="75" width="75" height="85"/>
+        <!-- Kitchen -->
+        <rect x="265" y="185" width="95" height="75"/>
+        <!-- West Hall -->
+        <rect x="105" y="169" width="44" height="155"/>
+        <!-- Supply Closet -->
+        <rect x="52" y="218" width="53" height="52"/>
+        <!-- East Hall -->
+        <rect x="205" y="169" width="44" height="155"/>
+        <!-- YOU (The Office) -->
+        <rect x="152" y="275" width="50" height="68" stroke-width="3"/>
+        <text x="163" y="314" fill="#fff" stroke="none" font-size="13" font-family="monospace">YOU</text>
+      </svg>
+
+      <!-- 11 Camera Buttons -->
+      <button class="cam-btn active" id="btn-1A" style="left:135px;top:20px;" onclick="selectCamera('1A')">CAM<br>1A<div class="radar-tags" id="rad-1A"></div></button>
+      <button class="cam-btn" id="btn-1B" style="left:118px;top:76px;" onclick="selectCamera('1B')">CAM<br>1B<div class="radar-tags" id="rad-1B"></div></button>
+      <button class="cam-btn" id="btn-1C" style="left:68px;top:142px;" onclick="selectCamera('1C')">CAM<br>1C<div class="radar-tags" id="rad-1C"></div></button>
+      <button class="cam-btn" id="btn-2A" style="left:118px;top:245px;" onclick="selectCamera('2A')">CAM<br>2A<div class="radar-tags" id="rad-2A"></div></button>
+      <button class="cam-btn" id="btn-2B" style="left:118px;top:292px;" onclick="selectCamera('2B')">CAM<br>2B<div class="radar-tags" id="rad-2B"></div></button>
+      <button class="cam-btn" id="btn-3"  style="left:45px;top:232px;"  onclick="selectCamera('3')">CAM<br>3<div class="radar-tags" id="rad-3"></div></button>
+      <button class="cam-btn" id="btn-4A" style="left:212px;top:245px;" onclick="selectCamera('4A')">CAM<br>4A<div class="radar-tags" id="rad-4A"></div></button>
+      <button class="cam-btn" id="btn-4B" style="left:212px;top:292px;" onclick="selectCamera('4B')">CAM<br>4B<div class="radar-tags" id="rad-4B"></div></button>
+      <button class="cam-btn" id="btn-5"  style="left:18px;top:82px;"   onclick="selectCamera('5')">CAM<br>5<div class="radar-tags" id="rad-5"></div></button>
+      <button class="cam-btn" id="btn-6"  style="left:295px;top:218px;" onclick="selectCamera('6')">CAM<br>6<div class="radar-tags" id="rad-6"></div></button>
+      <button class="cam-btn" id="btn-7"  style="left:302px;top:92px;"  onclick="selectCamera('7')">CAM<br>7<div class="radar-tags" id="rad-7"></div></button>
+    </div>
+  </div>
+
+  <!-- HUD LAYER -->
+  <div id="hud-layer">
+    <button id="mute-call-btn" onclick="mutePhoneCall()">MUTE CALL</button>
+    <div id="phone-subtitles"></div>
+
+    <div id="dev-toolbar">
+      <button class="tool-pill" id="btn-speed" onclick="toggleSpeedMode()" title="Switch between authentic 89s/hr and 3x fast 30s/hr">Speed: 1x (89s/hr)</button>
+      <button class="tool-pill" id="btn-radar" onclick="toggleRadar()" title="Show live FNaF 1 AI movement timers & positions">AI Radar: OFF</button>
+      <button class="tool-pill" onclick="triggerGoldenFreddyPoster()" title="Test Golden Freddy apparition on CAM 2B">Summon Golden</button>
+    </div>
+    <div id="ai-debug-box"></div>
+
+    <div class="hud-top-right">
+      <div id="hud-time">12 AM</div>
+      <div id="hud-night">Night 1</div>
+    </div>
+
+    <div class="hud-bottom-left">
+      <div id="hud-power">Power left: 100%</div>
+      <div class="usage-row">
+        <span>Usage:</span>
+        <div class="usage-bars" id="usage-bars">
+          <div class="u-bar on-1"></div>
+          <div class="u-bar"></div>
+          <div class="u-bar"></div>
+          <div class="u-bar"></div>
+          <div class="u-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="monitor-toggle-bar" onclick="toggleMonitor()">
+      &#x25B2; &#x25BC; MONITOR [SPACE]
+    </div>
+  </div>
+
+  <!-- HALLUCINATION FLASH ("IT'S ME") -->
+  <div id="hallucination-overlay">
+    <img id="hallucination-img" src="assets/sprites/golden.png" alt="Hallucination">
+    <h1 id="hallucination-text">IT'S ME</h1>
+  </div>
+
+  <!-- JUMPSCARE LAYER -->
+  <div id="jumpscare-layer">
+    <img id="jumpscare-bg" src="assets/cams/office_normal.jpg" alt="BG">
+    <img id="jumpscare-char" src="assets/sprites/bonnie.png" alt="Jumpscare">
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// 100% AUTHENTIC FIVE NIGHTS AT FREDDY'S 1 ENGINE & AI MOVEMENT ALGORITHM
+// ============================================================================
+
+const CAM_NAMES = {
+  '1A': 'Show Stage',
+  '1B': 'Dining Area',
+  '1C': 'Pirate Cove',
+  '2A': 'West Hall',
+  '2B': 'West Hall Corner',
+  '3':  'Supply Closet',
+  '4A': 'East Hall',
+  '4B': 'East Hall Corner',
+  '5':  'Backstage',
+  '6':  'Kitchen',
+  '7':  'Restrooms'
+};
+
+// Exact FNaF 1 Starting AI Levels per Night (Nights 1 to 6)
+const NIGHT_STARTING_AI = {
+  1: { freddy: 0, bonnie: 0, chica: 0, foxy: 0 },
+  2: { freddy: 0, bonnie: 3, chica: 1, foxy: 1 },
+  3: { freddy: 1, bonnie: 0, chica: 5, foxy: 2 },
+  4: { freddy: 2, bonnie: 2, chica: 4, foxy: 6 }, // Freddy is 1 or 2 in FNaF 1 Night 4
+  5: { freddy: 3, bonnie: 5, chica: 7, foxy: 5 },
+  6: { freddy: 4, bonnie: 10, chica: 12, foxy: 16 }
+};
+
+// Phone Guy Transcripts (Nights 1-5)
+const PHONE_CALLS = {
+  1: "Hello? Hello, hello! Uh, I wanted to record a message for you to help you get settled in on your first night. Welcome to Ashi's Pizza! Watch the cameras, check the hall lights, and only close the doors if absolutely necessary—conserve your power!",
+  2: "Uhh, hello? Hello? Uh, well, if you're hearing this and you made it to day two, uh, congrats! The characters will become much more active tonight. Remember to check Pirate Cove (CAM 1C) regularly—Foxy doesn't like being ignored!",
+  3: "Hello, hello! Hey you're doing great! Most people don't last this long. Things will start getting real tonight: Freddy himself is starting to move in the shadows. Keep watching the East Hall Corner (CAM 4B)!",
+  4: "Hello, hello? Hey! Hey, wow, day 4. I knew you could do it. Uh, hey, listen, I may not be around to send you a message tomorrow... *[Loud banging & Toreador March jingle]* ...check the back room masks if you ever get caught...",
+  5: "...*[Garbled demonic robotic voice & metallic static over the phone line]*... IT'S ME..."
+};
+
+// Web Audio Synthesizer for 100% authentic FNaF 1 sound effects without external audio blocks
+let audioCtx = null;
+let fanNode = null;
+let lightBuzzNode = null;
+
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+function playSound(type) {
+  ensureAudio();
+  const now = audioCtx.currentTime;
+
+  if (type === 'blip') {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1150, now);
+    osc.frequency.setValueAtTime(1680, now + 0.03);
+    g.gain.setValueAtTime(0.09, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.09);
+  } else if (type === 'door') {
+    // Heavy hydraulic door slam
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(140, now);
+    osc.frequency.exponentialRampToValueAtTime(36, now + 0.28);
+    g.gain.setValueAtTime(0.35, now);
+    g.gain.exponentialRampToValueAtTime(0.01, now + 0.30);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.30);
+  } else if (type === 'error') {
+    // Jammed button error buzz
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(95, now);
+    osc.frequency.setValueAtTime(75, now + 0.1);
+    g.gain.setValueAtTime(0.25, now);
+    g.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.25);
+  } else if (type === 'window_scare') {
+    // Iconic FNaF discordant stinger when spotting animatronic in doorway/window
+    [220, 233.08, 311.13, 466.16, 622.25].forEach(freq => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      g.gain.setValueAtTime(0.12, now);
+      g.gain.exponentialRampToValueAtTime(0.001, now + 1.1);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 1.1);
+    });
+  } else if (type === 'honk') {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(580, now);
+    osc.frequency.setValueAtTime(740, now + 0.05);
+    osc.frequency.setValueAtTime(520, now + 0.12);
+    g.gain.setValueAtTime(0.2, now);
+    g.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 0.2);
+  } else if (type === 'knock') {
+    // Foxy banging on Left Door 3 times
+    [0, 0.22, 0.45].forEach(offset => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(85, now + offset);
+      osc.frequency.exponentialRampToValueAtTime(28, now + offset + 0.16);
+      g.gain.setValueAtTime(0.45, now + offset);
+      g.gain.exponentialRampToValueAtTime(0.01, now + offset + 0.18);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(now + offset); osc.stop(now + offset + 0.18);
+    });
+  } else if (type === 'laugh') {
+    // Freddy deep slowed laugh when moving
+    [0, 0.24, 0.48].forEach((off, i) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(135 - i * 12, now + off);
+      osc.frequency.exponentialRampToValueAtTime(80, now + off + 0.2);
+      g.gain.setValueAtTime(0.18, now + off);
+      g.gain.exponentialRampToValueAtTime(0.005, now + off + 0.22);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(now + off); osc.stop(now + off + 0.22);
+    });
+  } else if (type === 'pots') {
+    // Chica kitchen clatter
+    [520, 880, 1340, 670].forEach((f, i) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(f, now + i * 0.08);
+      g.gain.setValueAtTime(0.06, now + i * 0.08);
+      g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.12);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.12);
+    });
+  } else if (type === 'toreador') {
+    // Freddy's Toreador March Music Box notes
+    const notes = [
+      [523.25, 0.0, 0.35], [587.33, 0.4, 0.35], [523.25, 0.8, 0.35],
+      [440.00, 1.2, 0.35], [440.00, 1.6, 0.35], [440.00, 2.0, 0.25],
+      [392.00, 2.3, 0.25], [440.00, 2.6, 0.25], [466.16, 2.9, 0.45], [440.00, 3.4, 0.5]
+    ];
+    notes.forEach(([freq, t, dur]) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + t);
+      g.gain.setValueAtTime(0.14, now + t);
+      g.gain.exponentialRampToValueAtTime(0.001, now + t + dur);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(now + t); osc.stop(now + t + dur);
+    });
+  } else if (type === 'jumpscare') {
+    // Classic FNaF 1 multi-oscillator robotic shriek + white noise burst
+    [190, 285, 415, 590, 830, 1180].forEach(freq => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.linearRampToValueAtTime(freq * 1.18, now + 0.4);
+      osc.frequency.linearRampToValueAtTime(freq * 0.92, now + 1.2);
+      g.gain.setValueAtTime(0.18, now);
+      g.gain.exponentialRampToValueAtTime(0.01, now + 1.45);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 1.45);
+    });
+  } else if (type === 'chime6am') {
+    // Westminster 6 AM Grandfather Clock Chime + Children Cheer
+    const chime = [[659.25, 0], [523.25, 0.55], [587.33, 1.1], [392.00, 1.65]];
+    chime.forEach(([freq, t]) => {
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now + t);
+      g.gain.setValueAtTime(0.22, now + t);
+      g.gain.exponentialRampToValueAtTime(0.002, now + t + 0.9);
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start(now + t); osc.stop(now + t + 0.9);
+    });
+  } else if (type === 'powerdown') {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(32, now + 1.8);
+    g.gain.setValueAtTime(0.22, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(now); osc.stop(now + 1.8);
+  }
+}
+
+// Game State
+let savedNight = parseInt(localStorage.getItem('fnaf_saved_night') || '1', 10);
+let starsUnlocked = JSON.parse(localStorage.getItem('fnaf_stars') || '{"s1":false,"s2":false,"s3":false}');
+let customAI = { freddy: 20, bonnie: 20, chica: 20, foxy: 20 };
+
+let G = {
+  running: false,
+  night: 1,
+  hour: 0, // 0 = 12 AM, 1..5 = 1..5 AM
+  nightSeconds: 0,
+  hourLengthSec: 89, // Authentic FNaF 1 is 89s per hour (or 30s in 3x Fast Mode)
+  fastMode: false,
+  radarOn: false,
+
+  power: 99.9,
+  powerOut: false,
+  powerOutStage: 0, // 0=waiting for Freddy, 1=Freddy playing Toreador March, 2=pitch black waiting for attack
+  powerOutTimer: 0,
+
+  officePanX: -160, // -320..0 inside 1280px viewport
+  mouseX: 640,
+  camPanX: 0,
+  camPanDir: 1,
+
+  leftDoor: false,
+  rightDoor: false,
+  leftLight: false,
+  rightLight: false,
+  leftJammed: false,
+  rightJammed: false,
+  sawLeftScare: false,
+  sawRightScare: false,
+
+  monitorOpen: false,
+  currentCam: '1A',
+  camGarbleTimer: 0,
+  cam1AStare: false,
+  cam2BTwitch: false,
+  cam4BTwitch: false,
+  cam5Close: false,
+
+  // AI Levels (0..20)
+  ai: { freddy: 0, bonnie: 0, chica: 0, foxy: 0 },
+
+  // Positions: '1A','1B','1C','2A','2B','3','4A','4B','5','6','7','DOOR_L','DOOR_R','OFFICE'
+  pos: {
+    freddy: '1A',
+    bonnie: '1A',
+    chica:  '1A',
+    foxyStage: 0 // 0=curtains closed, 1=peeking, 2=stepped out, 3=gone/ready to sprint, 4=sprinting
+  },
+  subStep: { bonnie1B: 1, chica1B: 1, chica4A: 1, chica7: 1 },
+
+  // Exact FNaF 1 Movement Opportunity Timers (in seconds)
+  timers: {
+    bonnie: 0, // 4.97s
+    chica:  0, // 4.98s
+    foxy:   0, // 5.01s
+    freddy: 0  // 3.02s
+  },
+  foxyLockTimer: 0,      // 0.83s to 16.67s after closing monitor
+  foxyAttackWait: 0,     // 25s max at Stage 3 before auto-sprint
+  foxySprintTimer: 0,    // 1.6s sprint duration when viewed on CAM 2A
+  foxyKnocks: 0,         // Tracks 1%, 6%, 11%, 16% power drain on door hits
+  freddyCountdown: -1,   // (1000 - 100*AI)/60 sec countdown after winning a roll
+  officeAttackTimer: 0,  // Force monitor down if animatronic is inside OFFICE > 25s
+
+  // Golden Freddy state
+  goldenPosterOn2B: false,
+  goldenInOffice: false,
+  goldenOfficeTimer: 0,
+
+  // Phone call timer
+  phoneTimer: 0
+};
+
+// Update Title Screen Stars & Continue Label
+function updateTitleUI() {
+  document.getElementById('continue-night-label').textContent = `(Night ${Math.min(5, savedNight)})`;
+  let s = '';
+  if (starsUnlocked.s1) s += '★ ';
+  if (starsUnlocked.s2) s += '★ ';
+  if (starsUnlocked.s3) s += '★';
+  document.getElementById('title-stars').textContent = s;
+}
+updateTitleUI();
+
+// Title Screen Animatronic Glitch Effect
+setInterval(() => {
+  const titleEl = document.getElementById('title-screen');
+  if (titleEl.style.display === 'none') return;
+  const img = document.getElementById('title-bg-char');
+  const r = Math.random();
+  if (r < 0.08) {
+    img.src = 'assets/sprites/golden.png';
+    img.style.filter = 'contrast(2.1) brightness(0.85) saturate(0.2)';
+  } else if (r < 0.15) {
+    img.src = 'assets/sprites/bonnie.png';
+    img.style.filter = 'contrast(1.8) brightness(0.6) saturate(0.3)';
+  } else {
+    img.src = 'assets/sprites/freddy.png';
+    img.style.filter = 'contrast(1.55) brightness(0.62) saturate(0.35)';
+  }
+}, 180);
+
+// Static Canvas Renderer
+const staticCanvas = document.getElementById('static-canvas');
+const sCtx = staticCanvas.getContext('2d');
+function drawStaticNoise() {
+  const w = 160, h = 90;
+  const imgData = sCtx.createImageData(w, h);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const v = (Math.random() * 255) | 0;
+    d[i] = v; d[i+1] = v; d[i+2] = v; d[i+3] = 180;
+  }
+  sCtx.putImageData(imgData, 0, 0);
+  sCtx.drawImage(staticCanvas, 0, 0, w, h, 0, 0, staticCanvas.width, staticCanvas.height);
+}
+setInterval(drawStaticNoise, 55);
+
+// Menu Actions
+let newspaperTimeout = null;
+function startNewGame() {
+  ensureAudio();
+  playSound('blip');
+  savedNight = 1;
+  localStorage.setItem('fnaf_saved_night', '1');
+  updateTitleUI();
+  document.getElementById('title-screen').style.display = 'none';
+  const np = document.getElementById('newspaper-screen');
+  np.style.display = 'flex';
+  newspaperTimeout = setTimeout(() => {
+    skipNewspaper();
+  }, 4500);
+}
+
+function skipNewspaper() {
+  if (newspaperTimeout) { clearTimeout(newspaperTimeout); newspaperTimeout = null; }
+  document.getElementById('newspaper-screen').style.display = 'none';
+  startSelectedNight(1);
+}
+
+function continueGame() {
+  ensureAudio();
+  startSelectedNight(Math.min(5, savedNight));
+}
+
+function openCustomNight() {
+  ensureAudio();
+  playSound('blip');
+  document.getElementById('custom-night-modal').style.display = 'flex';
+}
+function closeCustomNight() {
+  playSound('blip');
+  document.getElementById('custom-night-modal').style.display = 'none';
+}
+function adjCustomAI(who, delta) {
+  playSound('blip');
+  customAI[who] = Math.max(0, Math.min(20, customAI[who] + delta));
+  document.getElementById('cn-' + who).textContent = customAI[who];
+}
+function setAllCustomAI(val) {
+  playSound('blip');
+  ['freddy', 'bonnie', 'chica', 'foxy'].forEach(k => {
+    customAI[k] = val;
+    document.getElementById('cn-' + k).textContent = val;
+  });
+}
+function launchCustomNight() {
+  ensureAudio();
+  // Famous FNaF 1 "1/9/8/7" Golden Freddy instant jumpscare easter egg!
+  if (customAI.freddy === 1 && customAI.bonnie === 9 && customAI.chica === 8 && customAI.foxy === 7) {
+    document.getElementById('custom-night-modal').style.display = 'none';
+    document.getElementById('title-screen').style.display = 'none';
+    triggerJumpscare('golden', '1/9/8/7 EASTER EGG TRIGGERED!');
+    return;
+  }
+  document.getElementById('custom-night-modal').style.display = 'none';
+  startSelectedNight(7);
+}
+
+function startSelectedNight(nightNum) {
+  ensureAudio();
+  playSound('blip');
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('victory-screen').style.display = 'none';
+
+  G.night = nightNum;
+  G.hour = 0;
+  G.nightSeconds = 0;
+  G.power = 99.9;
+  G.powerOut = false;
+  G.powerOutStage = 0;
+  G.powerOutTimer = 0;
+
+  G.leftDoor = false;
+  G.rightDoor = false;
+  G.leftLight = false;
+  G.rightLight = false;
+  G.leftJammed = false;
+  G.rightJammed = false;
+  G.sawLeftScare = false;
+  G.sawRightScare = false;
+
+  G.monitorOpen = false;
+  G.currentCam = '1A';
+  G.camGarbleTimer = 0;
+  G.pos = { freddy: '1A', bonnie: '1A', chica: '1A', foxyStage: 0 };
+  G.timers = { bonnie: 0, chica: 0, foxy: 0, freddy: 0 };
+  G.foxyLockTimer = 2.0;
+  G.foxyAttackWait = 0;
+  G.foxySprintTimer = 0;
+  G.foxyKnocks = 0;
+  G.freddyCountdown = -1;
+  G.officeAttackTimer = 0;
+  G.goldenPosterOn2B = false;
+  G.goldenInOffice = false;
+  G.goldenOfficeTimer = 0;
+
+  if (nightNum === 7) {
+    G.ai = { ...customAI };
+  } else {
+    G.ai = { ...NIGHT_STARTING_AI[nightNum] };
+  }
+
+  // Show Night Intro Screen
+  const ord = ['1st', '2nd', '3rd', '4th', '5th', '6th', '7th'][nightNum - 1];
+  document.getElementById('night-intro-text').textContent = `${ord} Night`;
+  const intro = document.getElementById('night-intro-screen');
+  intro.style.display = 'flex';
+
+  // Reset visual state
+  document.getElementById('door-left').classList.remove('closed');
+  document.getElementById('door-right').classList.remove('closed');
+  document.getElementById('cam-screen').style.display = 'none';
+  document.getElementById('golden-office-sprite').style.display = 'none';
+  document.getElementById('desk-fan').style.display = 'block';
+  staticCanvas.style.opacity = '0.06';
+
+  setTimeout(() => {
+    intro.style.display = 'none';
+    document.getElementById('hud-layer').style.display = 'block';
+    G.running = true;
+    startPhoneCall(nightNum);
+    updateOfficeVisuals();
+    updateHUD();
+  }, 2200);
+}
+
+function startPhoneCall(nightNum) {
+  const muteBtn = document.getElementById('mute-call-btn');
+  const sub = document.getElementById('phone-subtitles');
+  if (PHONE_CALLS[nightNum]) {
+    muteBtn.style.display = 'block';
+    sub.style.display = 'block';
+    sub.textContent = '📞 ' + PHONE_CALLS[nightNum];
+    G.phoneTimer = 18;
+  } else {
+    muteBtn.style.display = 'none';
+    sub.style.display = 'none';
+    G.phoneTimer = 0;
+  }
+}
+
+function mutePhoneCall() {
+  playSound('blip');
+  document.getElementById('mute-call-btn').style.display = 'none';
+  document.getElementById('phone-subtitles').style.display = 'none';
+  G.phoneTimer = 0;
+}
+
+function toggleSpeedMode() {
+  G.fastMode = !G.fastMode;
+  G.hourLengthSec = G.fastMode ? 30 : 89;
+  const btn = document.getElementById('btn-speed');
+  btn.textContent = G.fastMode ? 'Speed: 3x (30s/hr)' : 'Speed: 1x (89s/hr)';
+  btn.classList.toggle('active', G.fastMode);
+}
+
+function toggleRadar() {
+  G.radarOn = !G.radarOn;
+  const btn = document.getElementById('btn-radar');
+  btn.textContent = G.radarOn ? 'AI Radar: ON' : 'AI Radar: OFF';
+  btn.classList.toggle('active', G.radarOn);
+  document.getElementById('ai-debug-box').style.display = G.radarOn ? 'block' : 'none';
+  updateRadarUI();
+}
+
+function triggerGoldenFreddyPoster() {
+  G.goldenPosterOn2B = true;
+  if (!G.monitorOpen) toggleMonitor();
+  selectCamera('2B');
+}
+
+function honkNose() {
+  playSound('honk');
+}
+
+// Mouse Tracking for Office Panning
+document.getElementById('game-wrap').addEventListener('mousemove', e => {
+  const rect = e.currentTarget.getBoundingClientRect();
+  G.mouseX = ((e.clientX - rect.left) / rect.width) * 1280;
+});
+
+// Keyboard Shortcuts
+window.addEventListener('keydown', e => {
+  if (!G.running) return;
+  const k = e.key.toLowerCase();
+  if (k === 'q') toggleDoor('left');
+  else if (k === 'e') toggleDoor('right');
+  else if (k === 'z') toggleLight('left');
+  else if (k === 'c') toggleLight('right');
+  else if (k === ' ' || k === 's') { e.preventDefault(); toggleMonitor(); }
+  else if (k === 'a' || e.key === 'ArrowLeft') G.officePanX = Math.min(0, G.officePanX + 45);
+  else if (k === 'd' || e.key === 'ArrowRight') G.officePanX = Math.max(-320, G.officePanX - 45);
+});
+
+// Doors & Lights
+function toggleDoor(side) {
+  if (!G.running || G.powerOut || G.monitorOpen) return;
+  if (side === 'left') {
+    if (G.leftJammed) { playSound('error'); return; }
+    G.leftDoor = !G.leftDoor;
+    playSound('door');
+    document.getElementById('door-left').classList.toggle('closed', G.leftDoor);
+  } else {
+    if (G.rightJammed) { playSound('error'); return; }
+    G.rightDoor = !G.rightDoor;
+    playSound('door');
+    document.getElementById('door-right').classList.toggle('closed', G.rightDoor);
+  }
+  updateOfficeVisuals();
+  updateHUD();
+}
+
+function toggleLight(side) {
+  if (!G.running || G.powerOut || G.monitorOpen) return;
+  if (side === 'left') {
+    if (G.leftJammed) { playSound('error'); return; }
+    G.leftLight = !G.leftLight;
+    if (G.leftLight) G.rightLight = false;
+    playSound('blip');
+    if (G.leftLight && G.pos.bonnie === 'DOOR_L' && !G.sawLeftScare) {
+      G.sawLeftScare = true;
+      playSound('window_scare');
+    }
+  } else {
+    if (G.rightJammed) { playSound('error'); return; }
+    G.rightLight = !G.rightLight;
+    if (G.rightLight) G.leftLight = false;
+    playSound('blip');
+    if (G.rightLight && G.pos.chica === 'DOOR_R' && !G.sawRightScare) {
+      G.sawRightScare = true;
+      playSound('window_scare');
+    }
+  }
+  updateOfficeVisuals();
+  updateHUD();
+}
+
+function updateOfficeVisuals() {
+  // Update Left Button Image
+  const lImg = document.getElementById('panel-left-img');
+  if (G.leftDoor && G.leftLight) lImg.src = 'assets/bg/btn_l_both.png';
+  else if (G.leftDoor) lImg.src = 'assets/bg/btn_l_door.png';
+  else if (G.leftLight) lImg.src = 'assets/bg/btn_l_light.png';
+  else lImg.src = 'assets/bg/btn_l_off.png';
+
+  // Update Right Button Image
+  const rImg = document.getElementById('panel-right-img');
+  if (G.rightDoor && G.rightLight) rImg.src = 'assets/bg/btn_r_both.png';
+  else if (G.rightDoor) rImg.src = 'assets/bg/btn_r_door.png';
+  else if (G.rightLight) rImg.src = 'assets/bg/btn_r_light.png';
+  else rImg.src = 'assets/bg/btn_r_off.png';
+
+  // Update Office Background Image
+  const bg = document.getElementById('office-bg');
+  if (G.powerOut) {
+    if (G.powerOutStage === 1 && Math.random() < 0.72) {
+      bg.src = 'assets/cams/office_dark_freddy.jpg';
+    } else {
+      bg.src = 'assets/cams/office_dark.jpg';
+    }
+    return;
+  }
+
+  // Flicker hall light slightly (90% lit when active, just like FNaF 1)
+  const flickerOn = Math.random() < 0.92;
+  if (G.leftLight && flickerOn) {
+    bg.src = (G.pos.bonnie === 'DOOR_L') ? 'assets/cams/office_left_bonnie.jpg' : 'assets/cams/office_left_empty.jpg';
+  } else if (G.rightLight && flickerOn) {
+    bg.src = (G.pos.chica === 'DOOR_R') ? 'assets/cams/office_right_chica.jpg' : 'assets/cams/office_right_empty.jpg';
+  } else {
+    bg.src = 'assets/cams/office_normal.jpg';
+  }
+}
+
+// Camera Monitor Toggle & Selection
+function toggleMonitor() {
+  if (!G.running || G.powerOut) return;
+  G.monitorOpen = !G.monitorOpen;
+  playSound('blip');
+
+  if (G.monitorOpen) {
+    // Turning on monitor turns off hall lights
+    G.leftLight = false;
+    G.rightLight = false;
+    // Banishes Golden Freddy if he was sitting in the Office!
+    if (G.goldenInOffice) {
+      G.goldenInOffice = false;
+      G.goldenOfficeTimer = 0;
+      document.getElementById('golden-office-sprite').style.display = 'none';
+    }
+    // Roll random display variants when lifting monitor
+    G.cam1AStare = (Math.random() < 0.15);
+    G.cam2BTwitch = (Math.random() < 0.35);
+    G.cam4BTwitch = (Math.random() < 0.35);
+    G.cam5Close = (Math.random() < 0.28);
+    // Rare 1-in-50 roll for Golden Freddy poster on CAM 2B
+    if (Math.random() < 0.025) G.goldenPosterOn2B = true;
+
+    document.getElementById('cam-screen').style.display = 'block';
+    staticCanvas.style.opacity = '0.24';
+    checkCameraTriggers();
+    updateCameraFeed();
+  } else {
+    // Closing monitor starts Foxy's random 0.83s to 16.67s lock cooldown (exact FNaF 1 formula!)
+    G.foxyLockTimer = 0.83 + Math.random() * 15.84;
+    document.getElementById('cam-screen').style.display = 'none';
+    staticCanvas.style.opacity = '0.06';
+
+    // Did Golden Freddy get summoned by viewing CAM 2B?
+    if (G.goldenPosterOn2B && G.currentCam === '2B') {
+      G.goldenPosterOn2B = false;
+      G.goldenInOffice = true;
+      G.goldenOfficeTimer = 0;
+      document.getElementById('golden-office-sprite').style.display = 'block';
+      playSound('laugh');
+      flashHallucination();
+    }
+
+    // Did Bonnie or Chica sneak into the Office while monitor was up?
+    if (G.pos.bonnie === 'OFFICE') {
+      triggerJumpscare('bonnie', 'Bonnie got inside the Office while your monitor was up!');
+      return;
+    }
+    if (G.pos.chica === 'OFFICE') {
+      triggerJumpscare('chica', 'Chica got inside the Office while your monitor was up!');
+      return;
+    }
+  }
+  updateOfficeVisuals();
+  updateHUD();
+}
+
+function selectCamera(camId) {
+  if (!G.running || !G.monitorOpen) return;
+  G.currentCam = camId;
+  playSound('blip');
+  document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + camId).classList.add('active');
+  document.getElementById('cam-room-title').textContent = CAM_NAMES[camId];
+
+  checkCameraTriggers();
+  updateCameraFeed();
+}
+
+function checkCameraTriggers() {
+  if (!G.monitorOpen) return;
+  // Viewing CAM 2A when Foxy is at Stage 3 immediately triggers his visible sprint!
+  if (G.currentCam === '2A' && G.pos.foxyStage === 3) {
+    G.pos.foxyStage = 4;
+    G.foxySprintTimer = 0.01;
+  }
+}
+
+function updateCameraFeed() {
+  if (!G.monitorOpen) return;
+  const img = document.getElementById('cam-feed-img');
+  const dis = document.getElementById('cam-disabled-msg');
+
+  if (G.camGarbleTimer > 0) {
+    img.style.visibility = 'hidden';
+    dis.style.display = 'block';
+    dis.innerHTML = '-SIGNAL INTERRUPTED-<br><span style="font-size:18px;color:#a00;">ANIMATRONIC MOVEMENT DETECTED</span>';
+    staticCanvas.style.opacity = '0.78';
+    return;
+  }
+
+  staticCanvas.style.opacity = '0.24';
+  const c = G.currentCam;
+
+  if (c === '6') {
+    img.style.visibility = 'hidden';
+    dis.style.display = 'block';
+    let audioStatus = 'AUDIO ONLY';
+    if (G.pos.chica === '6') audioStatus = '🔊 [CLATTERING POTS & PANS IN KITCHEN]';
+    if (G.pos.freddy === '6') audioStatus = '🎵 [TOREADOR MARCH MUSIC BOX PLAYING]';
+    dis.innerHTML = `-CAMERA DISABLED-<br><span style="font-size:20px;color:#aaa;">${audioStatus}</span>`;
+    return;
+  }
+
+  img.style.visibility = 'visible';
+  dis.style.display = 'none';
+
+  if (c === '1A') {
+    const b = (G.pos.bonnie === '1A');
+    const ch = (G.pos.chica === '1A');
+    const f = (G.pos.freddy === '1A');
+    if (b && ch && f) img.src = 'assets/cams/cam1a_all.jpg';
+    else if (!b && ch && f) img.src = 'assets/cams/cam1a_nobonnie.jpg';
+    else if (b && !ch && f) img.src = 'assets/cams/cam1a_nochica.jpg';
+    else if (!b && !ch && f) img.src = G.cam1AStare ? 'assets/cams/cam1a_freddy_stare.jpg' : 'assets/cams/cam1a_freddy.jpg';
+    else img.src = 'assets/cams/cam1a_empty.jpg';
+  } else if (c === '1B') {
+    if (G.pos.bonnie === '1B') img.src = (G.subStep.bonnie1B === 2) ? 'assets/cams/cam1b_bonnie2.jpg' : 'assets/cams/cam1b_bonnie1.jpg';
+    else if (G.pos.chica === '1B') img.src = (G.subStep.chica1B === 2) ? 'assets/cams/cam1b_chica2.jpg' : 'assets/cams/cam1b_chica1.jpg';
+    else if (G.pos.freddy === '1B') img.src = 'assets/cams/cam1b_freddy.jpg';
+    else img.src = 'assets/cams/cam1b_empty.jpg';
+  } else if (c === '1C') {
+    const st = Math.min(3, G.pos.foxyStage);
+    img.src = `assets/cams/cam1c_${st}.jpg`;
+  } else if (c === '2A') {
+    if (G.pos.foxyStage === 4) {
+      if (G.foxySprintTimer < 0.5) img.src = 'assets/cams/cam2a_foxy_run1.jpg';
+      else if (G.foxySprintTimer < 1.0) img.src = 'assets/cams/cam2a_foxy_run2.jpg';
+      else img.src = 'assets/cams/cam2a_foxy_run3.jpg';
+    } else if (G.pos.bonnie === '2A') {
+      img.src = 'assets/cams/cam2a_bonnie.jpg';
+    } else {
+      img.src = 'assets/cams/cam2a_empty.jpg';
+    }
+  } else if (c === '2B') {
+    if (G.pos.bonnie === '2B') {
+      img.src = (G.cam2BTwitch && Math.random() < 0.5) ? 'assets/cams/cam2b_bonnie_twitch.jpg' : 'assets/cams/cam2b_bonnie.jpg';
+    } else if (G.goldenPosterOn2B) {
+      img.src = 'assets/cams/cam2b_golden.jpg';
+    } else {
+      img.src = 'assets/cams/cam2b_empty.jpg';
+    }
+  } else if (c === '3') {
+    img.src = (G.pos.bonnie === '3') ? 'assets/cams/cam3_bonnie.jpg' : 'assets/cams/cam3_empty.jpg';
+  } else if (c === '4A') {
+    if (G.pos.chica === '4A') img.src = (G.subStep.chica4A === 2) ? 'assets/cams/cam4a_chica2.jpg' : 'assets/cams/cam4a_chica1.jpg';
+    else if (G.pos.freddy === '4A') img.src = 'assets/cams/cam4a_freddy.jpg';
+    else img.src = 'assets/cams/cam4a_empty.jpg';
+  } else if (c === '4B') {
+    if (G.pos.chica === '4B') {
+      img.src = (G.cam4BTwitch && Math.random() < 0.5) ? 'assets/cams/cam4b_chica_twitch.jpg' : 'assets/cams/cam4b_chica.jpg';
+    } else if (G.pos.freddy === '4B') {
+      img.src = 'assets/cams/cam4b_freddy.jpg';
+    } else {
+      img.src = 'assets/cams/cam4b_empty.jpg';
+    }
+  } else if (c === '5') {
+    if (G.pos.bonnie === '5') img.src = G.cam5Close ? 'assets/cams/cam5_bonnie_close.jpg' : 'assets/cams/cam5_bonnie1.jpg';
+    else img.src = 'assets/cams/cam5_empty.jpg';
+  } else if (c === '7') {
+    if (G.pos.chica === '7') img.src = (G.subStep.chica7 === 2) ? 'assets/cams/cam7_chica2.jpg' : 'assets/cams/cam7_chica1.jpg';
+    else if (G.pos.freddy === '7') img.src = 'assets/cams/cam7_freddy.jpg';
+    else img.src = 'assets/cams/cam7_empty.jpg';
+  }
+}
+
+// ============================================================================
+// EXACT FNAF 1 MOVEMENT PATHS & DICE ROLLS (1..20 <= AI)
+// ============================================================================
+function rollAI(aiLevel) {
+  if (aiLevel <= 0) return false;
+  const roll = Math.floor(Math.random() * 20) + 1; // 1..20
+  return roll <= aiLevel;
+}
+
+function triggerCamGarbleIfWatched(oldRoom, newRoom) {
+  if (G.monitorOpen && (G.currentCam === oldRoom || G.currentCam === newRoom)) {
+    G.camGarbleTimer = 1.6;
+    playSound('error');
+    updateCameraFeed();
+  }
+}
+
+function moveBonnie() {
+  const cur = G.pos.bonnie;
+  let next = cur;
+  if (cur === '1A') next = (Math.random() < 0.7) ? '1B' : '5';
+  else if (cur === '1B') next = (Math.random() < 0.55) ? '2A' : '5';
+  else if (cur === '5')  next = (Math.random() < 0.6) ? '2A' : '1B';
+  else if (cur === '2A') next = (Math.random() < 0.55) ? '2B' : '3';
+  else if (cur === '3')  next = (Math.random() < 0.65) ? 'DOOR_L' : '2A';
+  else if (cur === '2B') next = (Math.random() < 0.7) ? 'DOOR_L' : '3';
+  else if (cur === 'DOOR_L') {
+    if (G.leftDoor) {
+      // Blocked by Left Door! Retreats to Dining Area (1B)
+      next = '1B';
+      G.sawLeftScare = false;
+    } else {
+      // Left Door was OPEN! Bonnie enters the Office and jams the Left Door/Light buttons!
+      next = 'OFFICE';
+      G.leftJammed = true;
+      G.leftLight = false;
+    }
+  }
+  if (next !== cur) {
+    G.pos.bonnie = next;
+    if (next === '1B') G.subStep.bonnie1B = (Math.random() < 0.5) ? 1 : 2;
+    triggerCamGarbleIfWatched(cur, next);
+    updateOfficeVisuals();
+    updateCameraFeed();
+  }
+}
+
+function moveChica() {
+  const cur = G.pos.chica;
+  let next = cur;
+  if (cur === '1A') next = '1B';
+  else if (cur === '1B') next = (Math.random() < 0.6) ? '7' : '6';
+  else if (cur === '7')  next = (Math.random() < 0.6) ? '4A' : '6';
+  else if (cur === '6')  next = (Math.random() < 0.65) ? '4A' : '7';
+  else if (cur === '4A') next = (Math.random() < 0.7) ? '4B' : '1B';
+  else if (cur === '4B') next = (Math.random() < 0.75) ? 'DOOR_R' : '4A';
+  else if (cur === 'DOOR_R') {
+    if (G.rightDoor) {
+      // Blocked by Right Door! Retreats to 4A or 1B
+      next = (Math.random() < 0.5) ? '4A' : '1B';
+      G.sawRightScare = false;
+    } else {
+      // Right Door was OPEN! Chica enters the Office and jams the Right Door/Light buttons!
+      next = 'OFFICE';
+      G.rightJammed = true;
+      G.rightLight = false;
+    }
+  }
+  if (next !== cur) {
+    G.pos.chica = next;
+    if (next === '1B') G.subStep.chica1B = (Math.random() < 0.5) ? 1 : 2;
+    if (next === '4A') G.subStep.chica4A = (Math.random() < 0.5) ? 1 : 2;
+    if (next === '7')  G.subStep.chica7  = (Math.random() < 0.5) ? 1 : 2;
+    if (next === '6') playSound('pots');
+    triggerCamGarbleIfWatched(cur, next);
+    updateOfficeVisuals();
+    updateCameraFeed();
+  }
+}
+
+function moveFreddy() {
+  const cur = G.pos.freddy;
+  // In FNaF 1, Freddy NEVER leaves Show Stage (1A) until both Bonnie and Chica have left 1A!
+  if (cur === '1A' && (G.pos.bonnie === '1A' || G.pos.chica === '1A')) return;
+
+  let next = cur;
+  if (cur === '1A') next = '1B';
+  else if (cur === '1B') next = '7';
+  else if (cur === '7')  next = '6';
+  else if (cur === '6')  next = '4A';
+  else if (cur === '4A') next = '4B';
+  else if (cur === '4B') {
+    // At 4B, Freddy only enters Office if Right Door is OPEN and player is NOT watching CAM 4B!
+    if (!G.rightDoor && !(G.monitorOpen && G.currentCam === '4B')) {
+      next = 'OFFICE';
+    }
+  }
+
+  if (next !== cur) {
+    G.pos.freddy = next;
+    playSound('laugh');
+    if (next === '6') setTimeout(() => playSound('toreador'), 400);
+    triggerCamGarbleIfWatched(cur, next);
+    updateCameraFeed();
+    if (next === 'OFFICE') {
+      // Freddy attacks shortly after slipping into the Office!
+      setTimeout(() => {
+        if (G.running && G.pos.freddy === 'OFFICE') {
+          triggerJumpscare('freddy', 'Freddy slipped past the open Right Door from CAM 4B!');
+        }
+      }, 1500);
+    }
+  }
+}
+
+function resolveFoxyImpact() {
+  if (!G.running) return;
+  if (G.leftDoor) {
+    // Blocked by Left Door! Banging sound + 1% + 5%*knocks power drain (exact FNaF 1 formula!)
+    playSound('knock');
+    const drain = 1 + (G.foxyKnocks * 5);
+    G.power = Math.max(0, G.power - drain);
+    G.foxyKnocks++;
+    G.pos.foxyStage = (Math.random() < 0.5) ? 0 : 1;
+    G.foxyAttackWait = 0;
+    G.foxySprintTimer = 0;
+    updateCameraFeed();
+    updateHUD();
+  } else {
+    // Left Door was OPEN! Foxy lunges into the Office!
+    triggerJumpscare('foxy', 'Foxy sprinted down the West Hall while the Left Door was open!');
+  }
+}
+
+function flashHallucination() {
+  const el = document.getElementById('hallucination-overlay');
+  const img = document.getElementById('hallucination-img');
+  const txt = document.getElementById('hallucination-text');
+  img.src = (Math.random() < 0.5) ? 'assets/sprites/golden.png' : 'assets/sprites/freddy.png';
+  txt.textContent = (Math.random() < 0.7) ? "IT'S ME" : "PIZZA";
+  el.style.display = 'flex';
+  setTimeout(() => { el.style.display = 'none'; }, 140);
+}
+
+// ============================================================================
+// MAIN GAME LOOP (60 FPS)
+// ============================================================================
+let lastTime = performance.now();
+function gameLoop(now) {
+  const dt = Math.min(0.1, (now - lastTime) / 1000);
+  lastTime = now;
+
+  if (G.running) {
+    updateGame(dt);
+  }
+  requestAnimationFrame(gameLoop);
+}
+requestAnimationFrame(gameLoop);
+
+function updateGame(dt) {
+  // 1. Office Horizontal Panning via Mouse
+  if (!G.monitorOpen) {
+    if (G.mouseX < 340) {
+      const speed = ((340 - G.mouseX) / 340) * 380;
+      G.officePanX = Math.min(0, G.officePanX + speed * dt);
+    } else if (G.mouseX > 940) {
+      const speed = ((G.mouseX - 940) / 340) * 380;
+      G.officePanX = Math.max(-320, G.officePanX - speed * dt);
+    }
+    document.getElementById('office-world').style.transform = `translateX(${G.officePanX}px)`;
+  } else {
+    // Camera Auto-Pan (All cameras except 1C and 3 pan horizontally in FNaF 1!)
+    if (G.currentCam !== '1C' && G.currentCam !== '3') {
+      G.camPanX += G.camPanDir * 52 * dt;
+      if (G.camPanX <= -320) { G.camPanX = -320; G.camPanDir = 1; }
+      else if (G.camPanX >= 0) { G.camPanX = 0; G.camPanDir = -1; }
+      document.getElementById('cam-feed-wrap').style.transform = `translateX(${G.camPanX}px)`;
+    } else {
+      document.getElementById('cam-feed-wrap').style.transform = 'translateX(-160px)';
+    }
+  }
+
+  // 2. Night Clock Progression & Exact Hourly AI Level Increments
+  G.nightSeconds += dt;
+  const newHour = Math.floor(G.nightSeconds / G.hourLengthSec);
+  if (newHour > G.hour) {
+    G.hour = newHour;
+    if (G.hour >= 6) {
+      trigger6AMVictory();
+      return;
+    }
+    // Exact FNaF 1 Hourly AI Increments:
+    if (G.hour === 2) {
+      G.ai.bonnie = Math.min(20, G.ai.bonnie + 1);
+    } else if (G.hour === 3 || G.hour === 4) {
+      G.ai.bonnie = Math.min(20, G.ai.bonnie + 1);
+      G.ai.chica  = Math.min(20, G.ai.chica + 1);
+      G.ai.foxy   = Math.min(20, G.ai.foxy + 1);
+    }
+    updateHUD();
+  }
+
+  // Phone call subtitle timer
+  if (G.phoneTimer > 0) {
+    G.phoneTimer -= dt;
+    if (G.phoneTimer <= 0) mutePhoneCall();
+  }
+
+  // Camera garble recovery
+  if (G.camGarbleTimer > 0) {
+    G.camGarbleTimer -= dt;
+    if (G.camGarbleTimer <= 0) {
+      G.camGarbleTimer = 0;
+      updateCameraFeed();
+    }
+  }
+
+  // 3. Power Outage Sequence (0% Power)
+  if (G.powerOut) {
+    G.powerOutTimer += dt;
+    if (G.powerOutStage === 0 && G.powerOutTimer >= 5.0) {
+      // Stage 1: Freddy's face flickers in the Left Doorway playing Toreador March
+      G.powerOutStage = 1;
+      G.powerOutTimer = 0;
+      playSound('toreador');
+    } else if (G.powerOutStage === 1) {
+      updateOfficeVisuals();
+      if (G.powerOutTimer >= 9.5) {
+        // Stage 2: Total pitch-black silence
+        G.powerOutStage = 2;
+        G.powerOutTimer = 0;
+        document.getElementById('office-bg').src = 'assets/cams/office_dark.jpg';
+        document.getElementById('hud-layer').style.display = 'none';
+      }
+    } else if (G.powerOutStage === 2 && G.powerOutTimer >= 4.0) {
+      triggerJumpscare('freddy', 'You ran out of power!');
+    }
+    return;
+  }
+
+  // 4. Power Drain Formula (Exact FNaF 1 Usage Drain + Night Penalty)
+  let usage = 1;
+  if (G.leftDoor) usage++;
+  if (G.rightDoor) usage++;
+  if (G.leftLight || G.rightLight) usage++;
+  if (G.monitorOpen) usage++;
+
+  const baseDrainPerSec = usage * (1.0 / 9.6);
+  const nightExtraDrain = (G.night >= 2) ? (Math.min(5, G.night) * 0.03) : 0;
+  G.power = Math.max(0, G.power - (baseDrainPerSec + nightExtraDrain) * dt);
+
+  if (G.power <= 0) {
+    G.power = 0;
+    G.powerOut = true;
+    G.powerOutStage = 0;
+    G.powerOutTimer = 0;
+    G.leftDoor = false;
+    G.rightDoor = false;
+    G.leftLight = false;
+    G.rightLight = false;
+    if (G.monitorOpen) {
+      G.monitorOpen = false;
+      document.getElementById('cam-screen').style.display = 'none';
+    }
+    document.getElementById('door-left').classList.remove('closed');
+    document.getElementById('door-right').classList.remove('closed');
+    document.getElementById('desk-fan').style.display = 'none';
+    playSound('powerdown');
+    updateOfficeVisuals();
+    updateHUD();
+    return;
+  }
+
+  // 5. Exact Animatronic Movement Opportunity Timers
+  // BONNIE: Every 4.97 seconds
+  G.timers.bonnie += dt;
+  if (G.timers.bonnie >= 4.97) {
+    G.timers.bonnie -= 4.97;
+    if (rollAI(G.ai.bonnie)) moveBonnie();
+  }
+
+  // CHICA: Every 4.98 seconds
+  G.timers.chica += dt;
+  if (G.timers.chica >= 4.98) {
+    G.timers.chica -= 4.98;
+    if (rollAI(G.ai.chica)) moveChica();
+  }
+
+  // FOXY: Every 5.01 seconds (Locked while monitor is open or during post-monitor lock timer)
+  if (!G.monitorOpen && G.foxyLockTimer > 0) {
+    G.foxyLockTimer = Math.max(0, G.foxyLockTimer - dt);
+  }
+  G.timers.foxy += dt;
+  if (G.timers.foxy >= 5.01) {
+    G.timers.foxy -= 5.01;
+    if (!G.monitorOpen && G.foxyLockTimer <= 0 && G.pos.foxyStage < 3) {
+      if (rollAI(G.ai.foxy)) {
+        G.pos.foxyStage++;
+      }
+    }
+  }
+
+  // Foxy Stage 3 & Stage 4 (Sprint) handling
+  if (G.pos.foxyStage === 3) {
+    G.foxyAttackWait += dt;
+    if (G.foxyAttackWait >= 25.0) {
+      // Never checked CAM 2A for 25s -> Foxy attacks automatically!
+      resolveFoxyImpact();
+    }
+  } else if (G.pos.foxyStage === 4) {
+    G.foxySprintTimer += dt;
+    if (G.monitorOpen && G.currentCam === '2A') updateCameraFeed();
+    if (G.foxySprintTimer >= 1.55) {
+      resolveFoxyImpact();
+    }
+  }
+
+  // FREDDY: Every 3.02 seconds
+  const watchingFreddy = G.monitorOpen && (G.currentCam === G.pos.freddy);
+  G.timers.freddy += dt;
+  if (G.timers.freddy >= 3.02) {
+    G.timers.freddy -= 3.02;
+    if (!watchingFreddy && G.freddyCountdown < 0 && rollAI(G.ai.freddy)) {
+      // Starts countdown: (1000 - 100 * AI) frames at 60fps
+      G.freddyCountdown = Math.max(0.1, (1000 - 100 * G.ai.freddy) / 60.0);
+    }
+  }
+  if (G.freddyCountdown >= 0 && !watchingFreddy) {
+    G.freddyCountdown -= dt;
+    if (G.freddyCountdown <= 0) {
+      G.freddyCountdown = -1;
+      moveFreddy();
+    }
+  }
+
+  // If Bonnie or Chica is inside the Office waiting for monitor to drop, force monitor down after 22s
+  if (G.pos.bonnie === 'OFFICE' || G.pos.chica === 'OFFICE') {
+    G.officeAttackTimer += dt;
+    if (G.officeAttackTimer >= 22.0 && G.monitorOpen) {
+      toggleMonitor();
+    }
+  }
+
+  // Golden Freddy in Office timer (4.2 seconds to flip monitor back up or get jumpscared!)
+  if (G.goldenInOffice) {
+    G.goldenOfficeTimer += dt;
+    if (G.goldenOfficeTimer >= 4.2) {
+      triggerJumpscare('golden', "You stared at Golden Freddy in the Office without flipping up the monitor!");
+      return;
+    }
+  }
+
+  // Periodic UI & flicker updates
+  if (G.leftLight || G.rightLight) updateOfficeVisuals();
+  updateHUD();
+  if (G.radarOn) updateRadarUI();
+}
+
+function updateHUD() {
+  const hrDisplay = (G.hour === 0) ? 12 : G.hour;
+  document.getElementById('hud-time').textContent = `${hrDisplay} AM`;
+  document.getElementById('hud-night').textContent = `Night ${G.night}`;
+  document.getElementById('hud-power').textContent = `Power left: ${Math.ceil(G.power)}%`;
+
+  let usage = 1;
+  if (G.leftDoor) usage++;
+  if (G.rightDoor) usage++;
+  if (G.leftLight || G.rightLight) usage++;
+  if (G.monitorOpen) usage++;
+  if (G.powerOut) usage = 0;
+
+  const bars = document.getElementById('usage-bars').children;
+  for (let i = 0; i < 5; i++) {
+    bars[i].className = 'u-bar' + (i < usage ? ` on-${i+1}` : '');
+  }
+}
+
+function updateRadarUI() {
+  // Clear radar tags on camera buttons
+  ['1A','1B','1C','2A','2B','3','4A','4B','5','6','7'].forEach(c => {
+    const el = document.getElementById('rad-' + c);
+    if (el) el.innerHTML = '';
+  });
+  const addTag = (cam, label, bg) => {
+    const el = document.getElementById('rad-' + cam);
+    if (el) el.innerHTML += `<span class="r-dot" style="background:${bg}">${label}</span>`;
+  };
+  if (document.getElementById('rad-' + G.pos.freddy)) addTag(G.pos.freddy, 'F', '#ff9933');
+  if (document.getElementById('rad-' + G.pos.bonnie)) addTag(G.pos.bonnie, 'B', '#55ff99');
+  if (document.getElementById('rad-' + G.pos.chica))  addTag(G.pos.chica,  'C', '#ffee44');
+  addTag('1C', `Fx:${G.pos.foxyStage}`, '#ff5577');
+
+  const box = document.getElementById('ai-debug-box');
+  box.innerHTML =
+    `<b>FNaF 1 Live AI Engine (Hour ${G.hour === 0 ? 12 : G.hour} AM):</b><br>` +
+    `Freddy [AI ${G.ai.freddy}]: Pos=${G.pos.freddy} | NextRoll=${(3.02 - G.timers.freddy).toFixed(1)}s<br>` +
+    `Bonnie [AI ${G.ai.bonnie}]: Pos=${G.pos.bonnie} | NextRoll=${(4.97 - G.timers.bonnie).toFixed(1)}s<br>` +
+    `Chica  [AI ${G.ai.chica}]: Pos=${G.pos.chica}  | NextRoll=${(4.98 - G.timers.chica).toFixed(1)}s<br>` +
+    `Foxy   [AI ${G.ai.foxy}]: Stage=${G.pos.foxyStage}/3 | Lock=${G.foxyLockTimer.toFixed(1)}s`;
+}
+
+// ============================================================================
+// JUMPSCARE & 6 AM VICTORY HANDLERS
+// ============================================================================
+function triggerJumpscare(who, reasonText) {
+  G.running = false;
+  document.getElementById('hud-layer').style.display = 'none';
+  document.getElementById('cam-screen').style.display = 'none';
+
+  const layer = document.getElementById('jumpscare-layer');
+  const charImg = document.getElementById('jumpscare-char');
+  charImg.src = `assets/sprites/${who}.png`;
+  layer.style.display = 'flex';
+  playSound('jumpscare');
+
+  setTimeout(() => {
+    layer.style.display = 'none';
+    staticCanvas.style.opacity = '0.65';
+    document.getElementById('gameover-reason').textContent = reasonText || '';
+    document.getElementById('gameover-screen').style.display = 'flex';
+  }, 1450);
+}
+
+function trigger6AMVictory() {
+  G.running = false;
+  document.getElementById('hud-layer').style.display = 'none';
+  document.getElementById('cam-screen').style.display = 'none';
+  playSound('chime6am');
+
+  // Unlock next night & stars
+  if (G.night < 5 && savedNight <= G.night) {
+    savedNight = G.night + 1;
+    localStorage.setItem('fnaf_saved_night', String(savedNight));
+  }
+  if (G.night === 5) starsUnlocked.s1 = true;
+  if (G.night === 6) starsUnlocked.s2 = true;
+  if (G.night === 7 && G.ai.freddy === 20 && G.ai.bonnie === 20 && G.ai.chica === 20 && G.ai.foxy === 20) {
+    starsUnlocked.s3 = true;
+  }
+  localStorage.setItem('fnaf_stars', JSON.stringify(starsUnlocked));
+  updateTitleUI();
+
+  const vic = document.getElementById('victory-screen');
+  const clk = document.getElementById('victory-clock');
+  const sub = document.getElementById('victory-sub');
+  clk.textContent = '5:00 AM';
+  sub.style.opacity = '0';
+  sub.textContent = (G.night >= 5) ? 'CONGRATULATIONS! YOU SURVIVED THE SHIFT!' : `Advancing to Night ${G.night + 1}...`;
+  vic.style.display = 'flex';
+
+  setTimeout(() => { clk.textContent = '6:00 AM'; sub.style.opacity = '1'; }, 1200);
+  setTimeout(() => {
+    vic.style.display = 'none';
+    if (G.night < 5) startSelectedNight(G.night + 1);
+    else returnToMenu();
+  }, 5200);
+}
+
+function returnToMenu() {
+  G.running = false;
+  document.getElementById('gameover-screen').style.display = 'none';
+  document.getElementById('victory-screen').style.display = 'none';
+  document.getElementById('hud-layer').style.display = 'none';
+  document.getElementById('cam-screen').style.display = 'none';
+  document.getElementById('title-screen').style.display = 'flex';
+  staticCanvas.style.opacity = '0.18';
+}
+</script>
+</body>
+</html>
