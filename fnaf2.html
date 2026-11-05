@@ -146,45 +146,50 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 28px;
+    padding: 18px 24px;
   }
   .cn-grid {
     display: flex;
-    gap: 16px;
-    margin: 20px 0 26px;
+    gap: 10px 12px;
+    margin: 12px 0 16px;
     flex-wrap: wrap;
     justify-content: center;
+    max-width: 1180px;
   }
   .cn-card {
-    width: 182px;
+    width: 176px;
     background: #0d0d0d;
     border: 2px solid #444;
-    padding: 10px;
+    padding: 7px;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
+  .cn-card.withered {
+    border-color: #773322;
+    background: #120908;
+  }
   .cn-card img {
-    width: 125px;
-    height: 145px;
+    width: 104px;
+    height: 108px;
     object-fit: cover;
     object-position: top center;
     border: 1px solid #333;
     background: #050508;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
   }
-  .cn-name { font-size: 16px; font-weight: bold; }
-  .cn-role { font-size: 11px; color: #888; margin: 4px 0 8px; text-align: center; height: 26px; }
-  .cn-controls { display: flex; align-items: center; gap: 10px; }
+  .cn-name { font-size: 13px; font-weight: bold; letter-spacing: 0.5px; text-align: center; }
+  .cn-role { font-size: 10px; color: #888; margin: 2px 0 5px; text-align: center; height: 22px; line-height: 1.1; }
+  .cn-controls { display: flex; align-items: center; gap: 8px; }
   .cn-btn {
-    width: 30px; height: 30px; background: #222; border: 1px solid #666;
-    color: #fff; font-size: 18px; cursor: pointer; font-family: inherit;
+    width: 26px; height: 26px; background: #222; border: 1px solid #666;
+    color: #fff; font-size: 16px; cursor: pointer; font-family: inherit;
   }
   .cn-btn:hover { background: #fff; color: #000; }
-  .cn-val { font-size: 24px; width: 36px; text-align: center; font-weight: bold; }
-  .cn-actions { display: flex; gap: 18px; }
+  .cn-val { font-size: 20px; width: 32px; text-align: center; font-weight: bold; }
+  .cn-actions { display: flex; gap: 14px; }
   .cn-action-btn {
-    padding: 10px 26px; font-size: 20px; font-family: inherit;
+    padding: 8px 22px; font-size: 18px; font-family: inherit;
     background: #111; border: 2px solid #fff; color: #fff; cursor: pointer;
   }
   .cn-action-btn:hover { background: #fff; color: #000; }
@@ -569,12 +574,12 @@
 
   <!-- CUSTOM NIGHT MODAL -->
   <div id="custom-night-modal">
-    <h2 style="font-size:36px;letter-spacing:3px;">CUSTOM NIGHT — FIVE NIGHTS AT ASHI 2</h2>
+    <h2 style="font-size:28px;letter-spacing:3px;">CUSTOM NIGHT — 11 ANIMATRONICS (TOYS + WITHERED PART 1)</h2>
     <div class="cn-grid">
       <div class="cn-card">
         <img src="assets2/sprites/freddy.png" alt="Dark Ashi">
         <div class="cn-name">DARK ASHI</div>
-        <div class="cn-role">Hallway → Office (Use Mask)</div>
+        <div class="cn-role">Toy Freddy — Hallway → Mask</div>
         <div class="cn-controls">
           <button class="cn-btn" onclick="adjCustomAI('freddy', -1)">&lt;</button>
           <div class="cn-val" id="cn-freddy">20</div>
@@ -584,7 +589,7 @@
       <div class="cn-card">
         <img src="assets2/sprites/bonnie.png" alt="Tribal Ashi">
         <div class="cn-name">TRIBAL ASHI</div>
-        <div class="cn-role">Right Vent (Use Mask)</div>
+        <div class="cn-role">Toy Bonnie — R-Vent → Mask</div>
         <div class="cn-controls">
           <button class="cn-btn" onclick="adjCustomAI('bonnie', -1)">&lt;</button>
           <div class="cn-val" id="cn-bonnie">20</div>
@@ -594,7 +599,7 @@
       <div class="cn-card">
         <img src="assets2/sprites/chica.png" alt="Sport Ashi">
         <div class="cn-name">SPORT ASHI</div>
-        <div class="cn-role">Left Vent (Use Mask)</div>
+        <div class="cn-role">Toy Chica — L-Vent → Mask</div>
         <div class="cn-controls">
           <button class="cn-btn" onclick="adjCustomAI('chica', -1)">&lt;</button>
           <div class="cn-val" id="cn-chica">20</div>
@@ -604,7 +609,7 @@
       <div class="cn-card">
         <img src="assets2/sprites/foxy.png" alt="Fire Ashi">
         <div class="cn-name">FIRE ASHI</div>
-        <div class="cn-role">Hallway (Strobe Flashlight!)</div>
+        <div class="cn-role">Hallway — Strobe Flashlight!</div>
         <div class="cn-controls">
           <button class="cn-btn" onclick="adjCustomAI('foxy', -1)">&lt;</button>
           <div class="cn-val" id="cn-foxy">20</div>
@@ -614,7 +619,7 @@
       <div class="cn-card">
         <img src="assets2/sprites/buff.png" alt="Buff Ashi">
         <div class="cn-name">BUFF ASHI</div>
-        <div class="cn-role">Parts/Service → Office Blackout</div>
+        <div class="cn-role">Parts/Service → Office Mask</div>
         <div class="cn-controls">
           <button class="cn-btn" onclick="adjCustomAI('buff', -1)">&lt;</button>
           <div class="cn-val" id="cn-buff">20</div>
@@ -631,10 +636,64 @@
           <button class="cn-btn" onclick="adjCustomAI('puppet', 1)">&gt;</button>
         </div>
       </div>
+
+      <!-- 5 WITHERED ANIMATRONICS FROM FIVE NIGHTS AT ASHI 1 -->
+      <div class="cn-card withered">
+        <img src="assets2/sprites/w_freddy.png" alt="Withered Ashi">
+        <div class="cn-name" style="color:#ff9977;">WITHERED ASHI</div>
+        <div class="cn-role">FNaA 1 Freddy — CAM 08 → Hall</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('w_freddy', -1)">&lt;</button>
+          <div class="cn-val" id="cn-w_freddy">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('w_freddy', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card withered">
+        <img src="assets2/sprites/w_bonnie.png" alt="Withered Dress">
+        <div class="cn-name" style="color:#ff9977;">WITHERED DRESS</div>
+        <div class="cn-role">FNaA 1 Bonnie — CAM 08 → L-Vent</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('w_bonnie', -1)">&lt;</button>
+          <div class="cn-val" id="cn-w_bonnie">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('w_bonnie', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card withered">
+        <img src="assets2/sprites/w_chica.png" alt="Withered Pizza">
+        <div class="cn-name" style="color:#ff9977;">WITHERED PIZZA</div>
+        <div class="cn-role">FNaA 1 Chica — CAM 08 → R-Vent</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('w_chica', -1)">&lt;</button>
+          <div class="cn-val" id="cn-w_chica">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('w_chica', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card withered">
+        <img src="assets2/sprites/w_foxy.png" alt="Withered Bikini">
+        <div class="cn-name" style="color:#ff9977;">WITHERED BIKINI</div>
+        <div class="cn-role">FNaA 1 Foxy — CAM 12 → R-Vent</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('w_foxy', -1)">&lt;</button>
+          <div class="cn-val" id="cn-w_foxy">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('w_foxy', 1)">&gt;</button>
+        </div>
+      </div>
+      <div class="cn-card withered">
+        <img src="assets2/sprites/w_golden.png" alt="Withered Golden">
+        <div class="cn-name" style="color:#ffd700;">WITHERED GOLDEN</div>
+        <div class="cn-role">FNaA 1 Golden — Hall/Office Apparition</div>
+        <div class="cn-controls">
+          <button class="cn-btn" onclick="adjCustomAI('w_golden', -1)">&lt;</button>
+          <div class="cn-val" id="cn-w_golden">20</div>
+          <button class="cn-btn" onclick="adjCustomAI('w_golden', 1)">&gt;</button>
+        </div>
+      </div>
     </div>
     <div class="cn-actions">
       <button class="cn-action-btn" onclick="closeCustomNight()">BACK</button>
-      <button class="cn-action-btn" onclick="setAllCustomAI(20)">ALL 20 MODE</button>
+      <button class="cn-action-btn" onclick="setAllCustomAI(0)">ALL 0</button>
+      <button class="cn-action-btn" onclick="setAllCustomAI(10)">ALL 10</button>
+      <button class="cn-action-btn" onclick="setAllCustomAI(20)">11/20 GOLDEN FREDDY</button>
       <button class="cn-action-btn" onclick="launchCustomNight()">READY &gt;&gt;</button>
     </div>
   </div>
@@ -840,12 +899,12 @@ const CAM_NAMES = {
 };
 
 const NIGHT_STARTING_AI = {
-  1: { freddy: 2, bonnie: 3, chica: 3, foxy: 2, buff: 0, puppet: 3 },
-  2: { freddy: 3, bonnie: 5, chica: 4, foxy: 5, buff: 2, puppet: 6 },
-  3: { freddy: 5, bonnie: 6, chica: 6, foxy: 8, buff: 6, puppet: 9 },
-  4: { freddy: 7, bonnie: 8, chica: 8, foxy: 11, buff: 9, puppet: 12 },
-  5: { freddy: 10, bonnie: 10, chica: 10, foxy: 14, buff: 12, puppet: 15 },
-  6: { freddy: 14, bonnie: 14, chica: 14, foxy: 17, buff: 16, puppet: 18 }
+  1: { freddy: 2, bonnie: 3, chica: 3, foxy: 2, buff: 0, puppet: 3, w_freddy: 1, w_bonnie: 1, w_chica: 1, w_foxy: 2, w_golden: 0 },
+  2: { freddy: 3, bonnie: 5, chica: 4, foxy: 5, buff: 2, puppet: 6, w_freddy: 2, w_bonnie: 3, w_chica: 3, w_foxy: 5, w_golden: 0 },
+  3: { freddy: 4, bonnie: 5, chica: 5, foxy: 8, buff: 6, puppet: 9, w_freddy: 6, w_bonnie: 8, w_chica: 7, w_foxy: 7, w_golden: 2 },
+  4: { freddy: 6, bonnie: 7, chica: 7, foxy: 11, buff: 9, puppet: 12, w_freddy: 8, w_bonnie: 10, w_chica: 10, w_foxy: 10, w_golden: 4 },
+  5: { freddy: 9, bonnie: 9, chica: 9, foxy: 14, buff: 12, puppet: 15, w_freddy: 11, w_bonnie: 12, w_chica: 12, w_foxy: 12, w_golden: 7 },
+  6: { freddy: 12, bonnie: 12, chica: 12, foxy: 17, buff: 15, puppet: 18, w_freddy: 15, w_bonnie: 15, w_chica: 15, w_foxy: 15, w_golden: 12 }
 };
 
 let audioCtx = null;
@@ -905,7 +964,10 @@ function playSound(type) {
 
 let savedNight = parseInt(localStorage.getItem('fnaa2_saved_night') || '1', 10);
 let starsUnlocked = JSON.parse(localStorage.getItem('fnaa2_stars') || '{"s1":false,"s2":false,"s3":false}');
-let customAI = { freddy: 20, bonnie: 20, chica: 20, foxy: 20, buff: 20, puppet: 20 };
+let customAI = {
+  freddy: 20, bonnie: 20, chica: 20, foxy: 20, buff: 20, puppet: 20,
+  w_freddy: 20, w_bonnie: 20, w_chica: 20, w_foxy: 20, w_golden: 20
+};
 
 let G = {
   running: false,
@@ -934,25 +996,36 @@ let G = {
   puppetEscaped: false,
   puppetAttackTimer: 0,
 
-  // Office Blackout Confrontation (When Dark Freddy, Buff Ashi, Tribal Bonnie, or Sport Chica enters Office!)
-  officeIntruder: null, // null or 'freddy' | 'buff' | 'bonnie' | 'chica'
-  intruderTimer: 0,     // How long intruder has been in Office
-  intruderReaction: 0,  // Time spent WITHOUT mask while intruder is in Office (kills if > 1.35s!)
+  // Office Blackout Confrontation (Toy or Withered Animatronic enters Office!)
+  officeIntruder: null,
+  intruderTimer: 0,
+  intruderReaction: 0,
 
   // Foxy Hallway Stun / Patience
   foxyInHall: false,
-  foxyPatience: 0,      // Increases while Foxy is in hallway; flashing light reduces it & resets him!
+  foxyPatience: 0,
   foxyFlashHits: 0,
 
-  ai: { freddy: 0, bonnie: 0, chica: 0, foxy: 0, buff: 0, puppet: 0 },
-  pos: {
-    freddy: '09', // 09 -> 10 -> HALL -> OFFICE
-    bonnie: '09', // 09 -> 03 -> 04 -> 02 -> 06 -> VENT_R
-    chica:  '09', // 09 -> 07 -> 04 -> 01 -> 05 -> VENT_L
-    buff:   '08', // 08 -> 07 -> 03 -> 01 -> 05 -> VENT_L or HALL -> OFFICE
-    foxy:   '08'  // 08 -> 12 -> HALL
+  ai: {
+    freddy: 0, bonnie: 0, chica: 0, foxy: 0, buff: 0, puppet: 0,
+    w_freddy: 0, w_bonnie: 0, w_chica: 0, w_foxy: 0, w_golden: 0
   },
-  timers: { freddy: 0, bonnie: 0, chica: 0, foxy: 0, buff: 0 }
+  pos: {
+    freddy:   '09', // 09 -> 10 -> HALL -> OFFICE
+    bonnie:   '09', // 09 -> 03 -> 04 -> 02 -> 06 -> VENT_R
+    chica:    '09', // 09 -> 07 -> 04 -> 01 -> 05 -> VENT_L
+    buff:     '08', // 08 -> 07 -> 03 -> 01 -> 05 -> VENT_L or HALL -> OFFICE
+    foxy:     '08', // 08 -> 12 -> HALL
+    w_freddy: '08', // 08 -> 07 -> 03 -> HALL -> OFFICE
+    w_bonnie: '08', // 08 -> 07 -> 01 -> 05 -> VENT_L -> OFFICE
+    w_chica:  '08', // 08 -> 04 -> 02 -> 06 -> VENT_R -> OFFICE
+    w_foxy:   '12', // 12 -> 02 -> 06 -> VENT_R -> OFFICE
+    w_golden: 'NONE' // Apparition in HALL or OFFICE
+  },
+  timers: {
+    freddy: 0, bonnie: 0, chica: 0, foxy: 0, buff: 0,
+    w_freddy: 0, w_bonnie: 0, w_chica: 0, w_foxy: 0, w_golden: 0
+  }
 };
 
 function updateTitleUI() {
@@ -965,12 +1038,12 @@ function updateTitleUI() {
 }
 updateTitleUI();
 
-// Title Screen Glitch
+// Title Screen Glitch (Both Part 2 & Withered Part 1!)
 setInterval(() => {
   if (document.getElementById('title-screen').style.display === 'none') return;
   const img = document.getElementById('title-bg-char');
-  const pool = ['foxy', 'buff', 'bonnie', 'freddy', 'chica', 'puppet'];
-  if (Math.random() < 0.22) {
+  const pool = ['foxy', 'buff', 'bonnie', 'freddy', 'chica', 'puppet', 'w_freddy', 'w_bonnie', 'w_chica', 'w_foxy', 'w_golden'];
+  if (Math.random() < 0.25) {
     const pick = pool[Math.floor(Math.random() * pool.length)];
     img.src = `assets2/sprites/${pick}.png`;
   } else {
@@ -1066,8 +1139,14 @@ function startSelectedNight(n) {
   G.foxyPatience = 0;
   G.foxyFlashHits = 0;
 
-  G.pos = { freddy: '09', bonnie: '09', chica: '09', buff: '08', foxy: '08' };
-  G.timers = { freddy: 0, bonnie: 0, chica: 0, foxy: 0, buff: 0 };
+  G.pos = {
+    freddy: '09', bonnie: '09', chica: '09', buff: '08', foxy: '08',
+    w_freddy: '08', w_bonnie: '08', w_chica: '08', w_foxy: '12', w_golden: 'NONE'
+  };
+  G.timers = {
+    freddy: 0, bonnie: 0, chica: 0, foxy: 0, buff: 0,
+    w_freddy: 0, w_bonnie: 0, w_chica: 0, w_foxy: 0, w_golden: 0
+  };
   G.ai = (n === 7) ? { ...customAI } : { ...NIGHT_STARTING_AI[n] };
 
   document.getElementById('mask-overlay').classList.remove('on');
@@ -1124,13 +1203,15 @@ function setFlashlight(state) {
         G.foxyFlashHits++;
         G.foxyPatience = Math.max(0, G.foxyPatience - 1.8);
         if (G.foxyFlashHits >= 5) {
-          // Foxy is stunned and retreats to Parts/Service (CAM 08)!
           G.pos.foxy = '08';
           G.foxyFlashHits = 0;
           G.foxyPatience = 0;
         }
       }
-      if (!G.monitorOpen && (G.pos.foxy === 'HALL' || G.pos.freddy === 'HALL' || G.pos.buff === 'HALL' || G.pos.chica === 'HALL')) {
+      if (!G.monitorOpen && (
+        G.pos.foxy === 'HALL' || G.pos.freddy === 'HALL' || G.pos.buff === 'HALL' ||
+        G.pos.chica === 'HALL' || G.pos.w_freddy === 'HALL' || G.pos.w_bonnie === 'HALL' || G.pos.w_golden === 'HALL'
+      )) {
         playSound('hall_alarm');
       }
     }
@@ -1146,11 +1227,11 @@ function toggleVentLight(side) {
   if (side === 'left') {
     G.leftVentLight = !G.leftVentLight;
     if (G.leftVentLight) G.rightVentLight = false;
-    if (G.leftVentLight && (G.pos.chica === 'VENT_L' || G.pos.buff === 'VENT_L')) playSound('hall_alarm');
+    if (G.leftVentLight && (G.pos.chica === 'VENT_L' || G.pos.buff === 'VENT_L' || G.pos.w_bonnie === 'VENT_L')) playSound('hall_alarm');
   } else {
     G.rightVentLight = !G.rightVentLight;
     if (G.rightVentLight) G.leftVentLight = false;
-    if (G.rightVentLight && G.pos.bonnie === 'VENT_R') playSound('hall_alarm');
+    if (G.rightVentLight && (G.pos.bonnie === 'VENT_R' || G.pos.w_chica === 'VENT_R' || G.pos.w_foxy === 'VENT_R')) playSound('hall_alarm');
   }
   document.getElementById('btn-left-vent').classList.toggle('active', G.leftVentLight);
   document.getElementById('btn-right-vent').classList.toggle('active', G.rightVentLight);
@@ -1167,6 +1248,8 @@ function toggleMask() {
     document.getElementById('btn-left-vent').classList.remove('active');
     document.getElementById('btn-right-vent').classList.remove('active');
     document.getElementById('flashlight-btn').classList.remove('active');
+    // Putting on the mask also banishes Withered Golden Ashi from the Hallway!
+    if (G.pos.w_golden === 'HALL') G.pos.w_golden = 'NONE';
   }
   playSound('mask');
   document.getElementById('mask-overlay').classList.toggle('on', G.maskOn);
@@ -1231,16 +1314,22 @@ function updateOfficeVisuals() {
   if (!G.monitorOpen && G.flashlightOn && G.battery > 0) {
     if (G.pos.foxy === 'HALL' && G.pos.freddy === 'HALL') bg.src = 'assets2/cams/office_hall_foxy_freddy.jpg';
     else if (G.pos.foxy === 'HALL') bg.src = 'assets2/cams/office_hall_foxy.jpg';
+    else if (G.pos.w_golden === 'HALL') bg.src = 'assets2/cams/office_hall_w_golden.jpg';
+    else if (G.pos.w_freddy === 'HALL') bg.src = 'assets2/cams/office_hall_w_freddy.jpg';
+    else if (G.pos.w_bonnie === 'HALL') bg.src = 'assets2/cams/office_hall_w_bonnie.jpg';
     else if (G.pos.freddy === 'HALL') bg.src = 'assets2/cams/office_hall_freddy.jpg';
     else if (G.pos.buff === 'HALL') bg.src = 'assets2/cams/office_hall_buff.jpg';
     else if (G.pos.chica === 'HALL') bg.src = 'assets2/cams/office_hall_chica.jpg';
     else bg.src = 'assets2/cams/office_hall_empty.jpg';
   } else if (G.leftVentLight) {
-    if (G.pos.chica === 'VENT_L') bg.src = 'assets2/cams/office_left_chica.jpg';
+    if (G.pos.w_bonnie === 'VENT_L') bg.src = 'assets2/cams/office_left_w_bonnie.jpg';
+    else if (G.pos.chica === 'VENT_L') bg.src = 'assets2/cams/office_left_chica.jpg';
     else if (G.pos.buff === 'VENT_L') bg.src = 'assets2/cams/office_left_buff.jpg';
     else bg.src = 'assets2/cams/office_left_empty.jpg';
   } else if (G.rightVentLight) {
-    if (G.pos.bonnie === 'VENT_R') bg.src = 'assets2/cams/office_right_bonnie.jpg';
+    if (G.pos.w_chica === 'VENT_R') bg.src = 'assets2/cams/office_right_w_chica.jpg';
+    else if (G.pos.w_foxy === 'VENT_R') bg.src = 'assets2/cams/office_right_w_foxy.jpg';
+    else if (G.pos.bonnie === 'VENT_R') bg.src = 'assets2/cams/office_right_bonnie.jpg';
     else bg.src = 'assets2/cams/office_right_empty.jpg';
   } else {
     bg.src = 'assets2/cams/office_normal.jpg';
@@ -1253,32 +1342,48 @@ function updateCameraFeed() {
   const c = G.currentCam;
 
   if (c === '01') {
-    if (G.pos.chica === '01') img.src = 'assets2/cams/cam01_chica.jpg';
+    if (G.pos.w_bonnie === '01') img.src = 'assets2/cams/cam01_w_bonnie.jpg';
+    else if (G.pos.chica === '01') img.src = 'assets2/cams/cam01_chica.jpg';
     else if (G.pos.buff === '01') img.src = 'assets2/cams/cam01_buff.jpg';
     else img.src = 'assets2/cams/cam01_empty.jpg';
   } else if (c === '02') {
-    img.src = (G.pos.bonnie === '02') ? 'assets2/cams/cam02_bonnie.jpg' : 'assets2/cams/cam02_empty.jpg';
+    if (G.pos.w_chica === '02') img.src = 'assets2/cams/cam02_w_chica.jpg';
+    else if (G.pos.w_foxy === '02') img.src = 'assets2/cams/cam02_w_foxy.jpg';
+    else if (G.pos.bonnie === '02') img.src = 'assets2/cams/cam02_bonnie.jpg';
+    else img.src = 'assets2/cams/cam02_empty.jpg';
   } else if (c === '03') {
-    if (G.pos.bonnie === '03') img.src = 'assets2/cams/cam03_bonnie.jpg';
+    if (G.pos.w_freddy === '03') img.src = 'assets2/cams/cam03_w_freddy.jpg';
+    else if (G.pos.bonnie === '03') img.src = 'assets2/cams/cam03_bonnie.jpg';
     else if (G.pos.buff === '03') img.src = 'assets2/cams/cam03_buff.jpg';
     else img.src = 'assets2/cams/cam03_empty.jpg';
   } else if (c === '04') {
-    if (G.pos.bonnie === '04') img.src = 'assets2/cams/cam04_bonnie.jpg';
+    if (G.pos.w_chica === '04') img.src = 'assets2/cams/cam04_w_chica.jpg';
+    else if (G.pos.bonnie === '04') img.src = 'assets2/cams/cam04_bonnie.jpg';
     else if (G.pos.chica === '04') img.src = 'assets2/cams/cam04_chica.jpg';
     else img.src = 'assets2/cams/cam04_empty.jpg';
   } else if (c === '05') {
-    if (G.pos.chica === '05') img.src = 'assets2/cams/cam05_chica.jpg';
+    if (G.pos.w_bonnie === '05') img.src = 'assets2/cams/cam05_w_bonnie.jpg';
+    else if (G.pos.chica === '05') img.src = 'assets2/cams/cam05_chica.jpg';
     else if (G.pos.buff === '05') img.src = 'assets2/cams/cam05_buff.jpg';
     else img.src = 'assets2/cams/cam05_empty.jpg';
   } else if (c === '06') {
-    img.src = (G.pos.bonnie === '06') ? 'assets2/cams/cam06_bonnie.jpg' : 'assets2/cams/cam06_empty.jpg';
+    if (G.pos.w_chica === '06') img.src = 'assets2/cams/cam06_w_chica.jpg';
+    else if (G.pos.w_foxy === '06') img.src = 'assets2/cams/cam06_w_foxy.jpg';
+    else if (G.pos.bonnie === '06') img.src = 'assets2/cams/cam06_bonnie.jpg';
+    else img.src = 'assets2/cams/cam06_empty.jpg';
   } else if (c === '07') {
-    if (G.pos.chica === '07') img.src = 'assets2/cams/cam07_chica.jpg';
+    if (G.pos.w_freddy === '07') img.src = 'assets2/cams/cam07_w_freddy.jpg';
+    else if (G.pos.w_bonnie === '07') img.src = 'assets2/cams/cam07_w_bonnie.jpg';
+    else if (G.pos.chica === '07') img.src = 'assets2/cams/cam07_chica.jpg';
     else if (G.pos.buff === '07') img.src = 'assets2/cams/cam07_buff.jpg';
     else img.src = 'assets2/cams/cam07_empty.jpg';
   } else if (c === '08') {
+    const wf = (G.pos.w_freddy === '08'), wb = (G.pos.w_bonnie === '08'), wc = (G.pos.w_chica === '08');
     const b = (G.pos.buff === '08'), fx = (G.pos.foxy === '08');
-    if (b && fx) img.src = 'assets2/cams/cam08_all.jpg';
+    if (wf && wb && wc) img.src = 'assets2/cams/cam08_all.jpg';
+    else if (wf) img.src = 'assets2/cams/cam08_w_freddy.jpg';
+    else if (wb) img.src = 'assets2/cams/cam08_w_bonnie.jpg';
+    else if (wc) img.src = 'assets2/cams/cam08_w_chica.jpg';
     else if (b) img.src = 'assets2/cams/cam08_buff.jpg';
     else if (fx) img.src = 'assets2/cams/cam08_foxy.jpg';
     else img.src = 'assets2/cams/cam08_empty.jpg';
@@ -1296,7 +1401,9 @@ function updateCameraFeed() {
     else if (G.musicBox < 45) img.src = 'assets2/cams/cam11_1.jpg';
     else img.src = 'assets2/cams/cam11_0.jpg';
   } else if (c === '12') {
-    img.src = (G.pos.foxy === '12') ? 'assets2/cams/cam12_foxy.jpg' : 'assets2/cams/cam12_empty.jpg';
+    if (G.pos.w_foxy === '12') img.src = 'assets2/cams/cam12_w_foxy.jpg';
+    else if (G.pos.foxy === '12') img.src = 'assets2/cams/cam12_foxy.jpg';
+    else img.src = 'assets2/cams/cam12_empty.jpg';
   }
 }
 
@@ -1395,11 +1502,11 @@ function updateGame(dt) {
       G.intruderReaction += dt;
       if (G.intruderReaction >= 1.35) {
         flick.style.opacity = '0';
-        triggerJumpscare(G.officeIntruder, `You didn't put on the Freddy Mask fast enough when ${G.officeIntruder.toUpperCase()} Ashi entered the Office!`);
+        triggerJumpscare(G.officeIntruder, `You didn't put on the Freddy Mask fast enough when ${G.officeIntruder.toUpperCase()} entered the Office!`);
         return;
       }
     }
-    if (G.intruderTimer >= 3.6 && G.maskOn) {
+    if (G.intruderTimer >= 3.5 && G.maskOn) {
       // Fooled by the Freddy Mask! Intruder leaves the Office!
       flick.style.opacity = '0';
       const who = G.officeIntruder;
@@ -1408,6 +1515,11 @@ function updateGame(dt) {
       else if (who === 'buff') G.pos.buff = '08';
       else if (who === 'bonnie') G.pos.bonnie = '03';
       else if (who === 'chica') G.pos.chica = '07';
+      else if (who === 'w_freddy') G.pos.w_freddy = '08';
+      else if (who === 'w_bonnie') G.pos.w_bonnie = '08';
+      else if (who === 'w_chica') G.pos.w_chica = '08';
+      else if (who === 'w_foxy') G.pos.w_foxy = '12';
+      else if (who === 'w_golden') G.pos.w_golden = 'NONE';
       playSound('vent');
       updateOfficeVisuals();
     }
@@ -1464,7 +1576,7 @@ function updateGame(dt) {
     }
   }
 
-  // BUFF ASHI (Withered Giant Arm): 08 -> 07 -> 03 -> 01 -> 05 -> VENT_L / HALL -> OFFICE
+  // BUFF ASHI: 08 -> 07 -> 03 -> 01 -> 05 -> VENT_L / HALL -> OFFICE
   G.timers.buff += dt;
   if (G.timers.buff >= 5.10) {
     G.timers.buff -= 5.10;
@@ -1483,7 +1595,7 @@ function updateGame(dt) {
     }
   }
 
-  // FIRE ASHI (Withered Foxy): 08 -> 12 -> HALL (Immune to Mask! Must Strobe Flashlight!)
+  // FIRE ASHI: 08 -> 12 -> HALL (Immune to Mask! Must Strobe Flashlight!)
   G.timers.foxy += dt;
   if (G.timers.foxy >= 5.05) {
     G.timers.foxy -= 5.05;
@@ -1500,6 +1612,90 @@ function updateGame(dt) {
     if (G.foxyPatience >= 12.5) {
       triggerJumpscare('foxy', 'Fire Ashi lunged from the Central Hallway! (Strobe your Flashlight [Z] to reset him!)');
       return;
+    }
+  }
+
+  // WITHERED ASHI (FNaA 1 Freddy): 08 -> 07 -> 03 -> HALL -> OFFICE
+  G.timers.w_freddy += dt;
+  if (G.timers.w_freddy >= 5.00) {
+    G.timers.w_freddy -= 5.00;
+    if (rollAI(G.ai.w_freddy)) {
+      const c = G.pos.w_freddy;
+      if (c === '08') G.pos.w_freddy = '07';
+      else if (c === '07') G.pos.w_freddy = '03';
+      else if (c === '03') G.pos.w_freddy = 'HALL';
+      else if (c === 'HALL') startOfficeConfrontation('w_freddy');
+      updateCameraFeed(); updateOfficeVisuals();
+    }
+  }
+
+  // WITHERED DRESS ASHI (FNaA 1 Bonnie): 08 -> 07 -> 01 -> 05 -> VENT_L -> OFFICE
+  G.timers.w_bonnie += dt;
+  if (G.timers.w_bonnie >= 4.95) {
+    G.timers.w_bonnie -= 4.95;
+    if (rollAI(G.ai.w_bonnie)) {
+      const c = G.pos.w_bonnie;
+      if (c === '08') G.pos.w_bonnie = '07';
+      else if (c === '07') G.pos.w_bonnie = (Math.random() < 0.4) ? 'HALL' : '01';
+      else if (c === 'HALL') G.pos.w_bonnie = '01';
+      else if (c === '01') { G.pos.w_bonnie = '05'; playSound('vent'); }
+      else if (c === '05') { G.pos.w_bonnie = 'VENT_L'; playSound('vent'); }
+      else if (c === 'VENT_L') {
+        if (G.maskOn) { G.pos.w_bonnie = '08'; playSound('vent'); }
+        else startOfficeConfrontation('w_bonnie');
+      }
+      updateCameraFeed(); updateOfficeVisuals();
+    }
+  }
+
+  // WITHERED PIZZA ASHI (FNaA 1 Chica): 08 -> 04 -> 02 -> 06 -> VENT_R -> OFFICE
+  G.timers.w_chica += dt;
+  if (G.timers.w_chica >= 5.02) {
+    G.timers.w_chica -= 5.02;
+    if (rollAI(G.ai.w_chica)) {
+      const c = G.pos.w_chica;
+      if (c === '08') G.pos.w_chica = '04';
+      else if (c === '04') G.pos.w_chica = '02';
+      else if (c === '02') { G.pos.w_chica = '06'; playSound('vent'); }
+      else if (c === '06') { G.pos.w_chica = 'VENT_R'; playSound('vent'); }
+      else if (c === 'VENT_R') {
+        if (G.maskOn) { G.pos.w_chica = '08'; playSound('vent'); }
+        else startOfficeConfrontation('w_chica');
+      }
+      updateCameraFeed(); updateOfficeVisuals();
+    }
+  }
+
+  // WITHERED BIKINI ASHI (FNaA 1 Foxy / Mangle): 12 -> 02 -> 06 -> VENT_R -> OFFICE
+  G.timers.w_foxy += dt;
+  if (G.timers.w_foxy >= 5.12) {
+    G.timers.w_foxy -= 5.12;
+    if (rollAI(G.ai.w_foxy)) {
+      const c = G.pos.w_foxy;
+      if (c === '12') G.pos.w_foxy = '02';
+      else if (c === '02') { G.pos.w_foxy = '06'; playSound('vent'); }
+      else if (c === '06') { G.pos.w_foxy = 'VENT_R'; playSound('vent'); }
+      else if (c === 'VENT_R') {
+        if (G.maskOn) { G.pos.w_foxy = '12'; playSound('vent'); }
+        else startOfficeConfrontation('w_foxy');
+      }
+      updateCameraFeed(); updateOfficeVisuals();
+    }
+  }
+
+  // WITHERED GOLDEN ASHI (FNaA 1 Golden Freddy): Apparition in HALL or OFFICE
+  G.timers.w_golden += dt;
+  if (G.timers.w_golden >= 5.25) {
+    G.timers.w_golden -= 5.25;
+    if (rollAI(G.ai.w_golden)) {
+      if (G.pos.w_golden === 'NONE') {
+        G.pos.w_golden = 'HALL';
+        updateOfficeVisuals();
+      } else if (G.pos.w_golden === 'HALL') {
+        if (G.maskOn) G.pos.w_golden = 'NONE';
+        else startOfficeConfrontation('w_golden');
+        updateOfficeVisuals();
+      }
     }
   }
 
@@ -1570,16 +1766,20 @@ function updateRadarUI() {
     const el = document.getElementById('rad-' + cam);
     if (el) el.innerHTML += `<span class="r-dot" style="background:${col}">${txt}</span>`;
   };
-  addTag(G.pos.freddy, 'D', '#aaa');
-  addTag(G.pos.bonnie, 'T', '#5f9');
-  addTag(G.pos.chica,  'S', '#fe4');
-  addTag(G.pos.buff,   'B', '#f84');
-  addTag(G.pos.foxy,   'Fx', '#f44');
+  addTag(G.pos.freddy,   'D',  '#aaa');
+  addTag(G.pos.bonnie,   'T',  '#5f9');
+  addTag(G.pos.chica,    'S',  '#fe4');
+  addTag(G.pos.buff,     'B',  '#f84');
+  addTag(G.pos.foxy,     'Fx', '#f44');
+  addTag(G.pos.w_freddy, 'WF', '#c85');
+  addTag(G.pos.w_bonnie, 'WB', '#a6f');
+  addTag(G.pos.w_chica,  'WC', '#da3');
+  addTag(G.pos.w_foxy,   'WM', '#f7a');
 
   document.getElementById('ai-debug-box').innerHTML =
-    `<b>FNaA 2 Live AI State:</b><br>` +
-    `Dark Ashi: ${G.pos.freddy} | Tribal Ashi: ${G.pos.bonnie} | Sport Ashi: ${G.pos.chica}<br>` +
-    `Buff Ashi: ${G.pos.buff} | Fire Ashi: ${G.pos.foxy} (FlashHits: ${G.foxyFlashHits}/5)<br>` +
+    `<b>FNaA 2 Live AI (11 Characters):</b><br>` +
+    `Toys: Dark=${G.pos.freddy} | Tribal=${G.pos.bonnie} | Sport=${G.pos.chica} | Buff=${G.pos.buff} | Fire=${G.pos.foxy} (${G.foxyFlashHits}/5)<br>` +
+    `Withered (Part 1): W-Freddy=${G.pos.w_freddy} | W-Bonnie=${G.pos.w_bonnie} | W-Chica=${G.pos.w_chica} | W-Bikini=${G.pos.w_foxy} | W-Golden=${G.pos.w_golden}<br>` +
     `Monchhichi Box: ${G.musicBox.toFixed(0)}% | Intruder: ${G.officeIntruder || 'None'}`;
 }
 

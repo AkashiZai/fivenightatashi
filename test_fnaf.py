@@ -5,7 +5,7 @@ root = os.path.dirname(os.path.abspath(__file__))
 
 for page, cam_folder, expected_count in [
     ('index.html', 'assets/cams', 49),
-    ('fnaf2.html', 'assets2/cams', 51),
+    ('fnaf2.html', 'assets2/cams', 76),
 ]:
     html = open(os.path.join(root, page), encoding='utf-8').read()
     paths = re.findall(r'assets2?/[a-zA-Z0-9_./]+\.(?:png|jpg|gif)', html)
