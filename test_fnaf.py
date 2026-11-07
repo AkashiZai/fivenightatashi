@@ -7,9 +7,10 @@ for page, cam_folder, expected_count in [
     ('index.html', 'assets/cams', 49),
     ('fnaf2.html', 'assets2/cams', 76),
     ('fnaf3.html', 'assets3/cams', 47),
+    ('fnaf4.html', 'assets4/cams', 36),
 ]:
     html = open(os.path.join(root, page), encoding='utf-8').read()
-    paths = re.findall(r'assets[23]?/[a-zA-Z0-9_./]+\.(?:png|jpg|gif)', html)
+    paths = re.findall(r'assets[234]?/[a-zA-Z0-9_./]+\.(?:png|jpg|gif)', html)
     for p in set(paths):
         if '{' in p:
             continue

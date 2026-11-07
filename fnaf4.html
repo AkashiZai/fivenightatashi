@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Five Nights at Ashi's 4 — The Final Chapter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Creepster&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; color: #eee; font-family: 'VT323', monospace; }
+
+  #game-wrap {
+    position: relative; width: 100vw; height: 100vh; max-width: 177.78vh; max-height: 56.25vw;
+    margin: auto; top: 50%; transform: translateY(-50%);
+    background: #020000; overflow: hidden; border: 2px solid #260505;
+    box-shadow: 0 0 60px rgba(180, 0, 0, 0.22);
+  }
+
+  .crt-lines {
+    position: absolute; inset: 0; pointer-events: none; z-index: 90;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.78) 100%),
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%);
+    background-size: 100% 100%, 100% 4px;
+  }
+
+  /* TITLE SCREEN */
+  #title-screen {
+    position: absolute; inset: 0; z-index: 80; background: #030000;
+    display: flex; align-items: center; justify-content: space-between; padding: 3.5% 5.5%;
+    background-image:
+      radial-gradient(circle at 74% 52%, rgba(160, 15, 15, 0.25) 0%, rgba(0,0,0,0.96) 65%),
+      url('assets4/cams/bedroom_normal.jpg');
+    background-size: cover; background-position: center;
+  }
+  .title-left { z-index: 3; max-width: 54%; }
+  .title-h1 {
+    font-size: clamp(32px, 4.6vw, 68px); line-height: 0.92; letter-spacing: 3px;
+    color: #ff2a2a; text-shadow: 0 0 18px #a00, 3px 3px 0 #1a0000; margin-bottom: 6px;
+  }
+  .title-sub {
+    font-size: clamp(16px, 1.7vw, 25px); color: #b87a7a; letter-spacing: 3px; margin-bottom: 18px;
+  }
+  .menu-btn {
+    display: block; background: rgba(20, 3, 3, 0.78); border: 1px solid #551111;
+    color: #eee; font-family: 'VT323', monospace; font-size: clamp(20px, 2.2vw, 33px);
+    padding: 5px 16px; text-align: left; cursor: pointer; letter-spacing: 2px;
+    margin: 5px 0; transition: 0.12s; border-left: 4px solid #aa1111; width: 100%; max-width: 430px;
+  }
+  .menu-btn:hover { color: #ff4444; border-color: #ff3333; transform: translateX(8px); background: rgba(55, 5, 5, 0.85); }
+  .stars-row { color: #ff2222; font-size: clamp(22px, 2.5vw, 38px); letter-spacing: 6px; margin-bottom: 8px; text-shadow: 0 0 12px #f00; }
+
+  .title-showcase {
+    position: relative; width: 44%; height: 86%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 2;
+  }
+  .showcase-main {
+    height: 62%; object-fit: contain;
+    filter: drop-shadow(0 0 28px rgba(220, 0, 0, 0.65)) contrast(1.3);
+    transition: opacity 0.12s;
+  }
+  .showcase-strip {
+    display: flex; gap: 7px; margin-top: 10px; background: rgba(15, 2, 2, 0.85);
+    padding: 7px 10px; border: 1px solid #551111; border-radius: 4px; flex-wrap: wrap; justify-content: center;
+  }
+  .showcase-strip img {
+    width: 44px; height: 44px; object-fit: cover; object-position: top;
+    border: 1px solid #771818; border-radius: 3px; filter: contrast(1.25);
+  }
+
+  /* CUSTOM NIGHT MODAL */
+  #custom-modal {
+    position: absolute; inset: 0; z-index: 88; background: rgba(4, 0, 0, 0.96);
+    display: none; flex-direction: column; align-items: center; justify-content: center; padding: 18px;
+  }
+  .cn-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    width: 90%; max-width: 860px; margin: 14px 0;
+  }
+  .cn-card {
+    background: #110303; border: 1px solid #551515; padding: 10px; text-align: center;
+  }
+  .cn-card img { width: 68px; height: 68px; object-fit: cover; object-position: top; border: 1px solid #822; margin-bottom: 4px; }
+  .cn-card h4 { font-size: 20px; color: #ff6666; letter-spacing: 1px; }
+  .cn-ctrl { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 6px; font-size: 24px; }
+  .cn-btn { width: 30px; height: 30px; background: #2a0808; color: #fff; border: 1px solid #822; cursor: pointer; font-family: inherit; font-size: 22px; }
+
+  /* NIGHT INTRO */
+  #night-intro {
+    position: absolute; inset: 0; z-index: 85; background: #000;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+  }
+  #night-intro h2 { font-size: clamp(38px, 5vw, 76px); letter-spacing: 5px; color: #ff2222; text-shadow: 0 0 18px #900; }
+  #night-intro p { font-size: clamp(22px, 2.5vw, 38px); color: #aaa; margin-top: 8px; }
+
+  /* BEDROOM VIEWPORT */
+  #room-view {
+    position: absolute; inset: 0; overflow: hidden; background: #000;
+  }
+  #room-img {
+    width: 100%; height: 100%; object-fit: fill; display: block;
+    transition: transform 0.14s ease-out, filter 0.1s;
+  }
+  #flashlight-overlay {
+    position: absolute; inset: 0; pointer-events: none; z-index: 12;
+    background: radial-gradient(circle at 50% 52%, rgba(255,245,200,0.12) 0%, rgba(0,0,0,0.42) 48%, rgba(0,0,0,0.88) 100%);
+    opacity: 0; transition: opacity 0.08s;
+  }
+
+  /* CLICKABLE ROOM HOTSPOTS (WHEN IN CENTER BEDROOM) */
+  .hotspot {
+    position: absolute; z-index: 25; cursor: pointer;
+    border: 1px dashed rgba(255, 70, 70, 0.28); background: rgba(20, 0, 0, 0.22);
+    color: rgba(255, 210, 210, 0.85); font-size: clamp(16px, 1.6vw, 24px);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding-bottom: 12px; text-shadow: 0 0 8px #000, 0 0 4px #a00;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .hotspot:hover {
+    background: rgba(140, 15, 15, 0.28); border-color: rgba(255, 90, 90, 0.85); color: #fff;
+  }
+  #hs-left   { left: 4%; top: 16%; width: 22%; height: 64%; }
+  #hs-closet { left: 38%; top: 18%; width: 24%; height: 60%; }
+  #hs-right  { right: 4%; top: 16%; width: 22%; height: 64%; }
+
+  /* TOP HUD */
+  #hud-top {
+    position: absolute; top: 12px; left: 16px; right: 16px; z-index: 45;
+    display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none;
+  }
+  .hud-box {
+    pointer-events: auto; background: rgba(12, 2, 2, 0.82); border: 1px solid #551616;
+    padding: 8px 14px; border-radius: 4px;
+  }
+  .clock-txt { font-size: clamp(28px, 3.3vw, 50px); color: #ff3333; line-height: 1; letter-spacing: 2px; text-shadow: 0 0 10px #900; }
+  .night-txt { font-size: clamp(16px, 1.7vw, 24px); color: #ccc; letter-spacing: 2px; }
+
+  /* AUDIO SENSE / BREATHING INDICATOR */
+  #audio-sense-panel {
+    display: flex; flex-direction: column; gap: 4px; min-width: 250px;
+  }
+  .sense-row {
+    display: flex; align-items: center; justify-content: space-between; font-size: 18px; color: #ddd;
+  }
+  .breath-pill {
+    padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 17px;
+    background: #1a1a1a; color: #777; border: 1px solid #333;
+  }
+  .breath-pill.danger {
+    background: #550000; color: #ffdddd; border-color: #ff3333;
+    animation: pulseDanger 0.55s infinite alternate;
+  }
+  .breath-pill.safe {
+    background: #082a10; color: #7dff9b; border-color: #1f8838;
+  }
+  @keyframes pulseDanger { from { opacity: 0.65; } to { opacity: 1; box-shadow: 0 0 12px #f00; } }
+
+  /* BOTTOM ACTION BAR */
+  #hud-bottom {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 48; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
+    width: 94%;
+  }
+  .act-btn {
+    background: rgba(22, 4, 4, 0.9); border: 2px solid #882222; color: #fff;
+    font-family: 'VT323', monospace; font-size: clamp(18px, 2vw, 28px);
+    padding: 8px 18px; cursor: pointer; letter-spacing: 1.5px; border-radius: 4px;
+    transition: 0.1s; box-shadow: 0 0 14px rgba(0,0,0,0.8);
+  }
+  .act-btn:hover, .act-btn.active { background: #991818; border-color: #ff6666; color: #fff; }
+  .act-btn.flash-btn { border-color: #aa8822; background: rgba(35, 28, 4, 0.9); color: #ffea99; }
+  .act-btn.flash-btn.active { background: #aa8210; color: #fff; border-color: #fff; box-shadow: 0 0 22px rgba(255,220,100,0.65); }
+  .act-btn.door-btn { border-color: #4477aa; background: rgba(6, 18, 32, 0.9); color: #bfe2ff; }
+  .act-btn.door-btn.active { background: #1c5588; color: #fff; border-color: #99d6ff; }
+
+  /* AI RADAR OVERLAY (OPTIONAL TOGGLE) */
+  #radar-box {
+    position: absolute; top: 96px; left: 16px; z-index: 45;
+    background: rgba(10, 2, 2, 0.88); border: 1px solid #622; padding: 8px 12px;
+    font-size: 17px; line-height: 1.35; color: #f8bcbc; display: none; border-radius: 4px;
+  }
+
+  /* FUN WITH PLUSHTRAP MINIGAME OVERLAY */
+  #plushtrap-hud {
+    position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 46; background: rgba(10, 12, 4, 0.88); border: 1px solid #667722;
+    padding: 8px 20px; text-align: center; display: none; border-radius: 4px;
+  }
+
+  /* JUMPSCARE & ENDINGS */
+  #jumpscare-layer {
+    position: absolute; inset: 0; z-index: 95; background: #000;
+    display: none; align-items: center; justify-content: center; overflow: hidden;
+  }
+  #jumpscare-img {
+    width: 100%; height: 100%; object-fit: contain;
+    animation: shakeScare 0.055s infinite;
+  }
+  @keyframes shakeScare {
+    0%   { transform: scale(1.22) translate(-12px, 10px) rotate(-2deg); filter: contrast(1.6) brightness(1.2); }
+    50%  { transform: scale(1.34) translate(14px, -12px) rotate(2deg); filter: contrast(1.9) saturate(1.6); }
+    100% { transform: scale(1.26) translate(-8px, -8px) rotate(-1deg); }
+  }
+
+  #end-overlay {
+    position: absolute; inset: 0; z-index: 96; background: rgba(5, 0, 0, 0.95);
+    display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;
+  }
+  #end-title { font-size: clamp(42px, 6vw, 88px); color: #ff2222; letter-spacing: 5px; text-shadow: 0 0 22px #f00; }
+  #end-sub { font-size: clamp(20px, 2.3vw, 34px); color: #ddd; margin: 12px 0 22px; max-width: 720px; }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <div class="crt-lines"></div>
+
+  <!-- TITLE SCREEN -->
+  <div id="title-screen">
+    <div style="position:absolute; top:14px; right:20px; z-index:95; display:flex; gap:8px; flex-wrap:wrap;">
+      <a href="index.html" style="background:#221108; color:#ffaa44; border:2px solid #ffaa44; padding:5px 12px; font-size:20px; text-decoration:none; letter-spacing:1.5px; box-shadow:0 0 12px rgba(255,170,68,0.35);">◀ PART 1</a>
+      <a href="fnaf2.html" style="background:#112233; color:#55ccff; border:2px solid #55ccff; padding:5px 12px; font-size:20px; text-decoration:none; letter-spacing:1.5px; box-shadow:0 0 12px rgba(85,204,255,0.35);">◀ PART 2</a>
+      <a href="fnaf3.html" style="background:#18260c; color:#99ff44; border:2px solid #99ff44; padding:5px 12px; font-size:20px; text-decoration:none; letter-spacing:1.5px; box-shadow:0 0 12px rgba(153,255,68,0.35);">◀ PART 3</a>
+    </div>
+
+    <div class="title-left">
+      <div class="stars-row" id="stars-display">★</div>
+      <div class="title-h1">FIVE NIGHTS<br>AT ASHI'S 4</div>
+      <div class="title-sub">THE FINAL CHAPTER • LISTEN FOR BREATHING AT THE DOORS</div>
+
+      <button class="menu-btn" onclick="startGame(1)">NEW GAME (NIGHT 1)</button>
+      <button class="menu-btn" id="continue-btn" onclick="continueGame()">CONTINUE (NIGHT 1)</button>
+      <button class="menu-btn" onclick="startGame(5)">5TH NIGHT (NIGHTMARE FREDBEAR)</button>
+      <button class="menu-btn" onclick="startGame(6)">6TH NIGHT (SURVIVAL + 4 AM FREDBEAR)</button>
+      <button class="menu-btn" onclick="startGame(7)" style="color:#ff5555; border-left-color:#ff0000;">NIGHTMARE (NIGHT 7 — 20/20/20/20)</button>
+      <button class="menu-btn" onclick="openCustomNight()" style="color:#ffcc55;">CUSTOM NIGHT (AI SLIDERS)</button>
+      <button class="menu-btn" onclick="startPlushtrapMinigame(false)" style="color:#99ff66; border-left-color:#66cc33;">🔦 FUN WITH PLUSHTRAP (+2 HRS BONUS)</button>
+    </div>
+
+    <div class="title-showcase">
+      <img id="title-char-img" class="showcase-main" src="assets4/sprites/n_fredbear.png" alt="Nightmare Ashi">
+      <div class="showcase-strip">
+        <img src="assets4/sprites/n_freddy.png" title="Nightmare Freddy + Freddles (Bed)">
+        <img src="assets4/sprites/n_bonnie.png" title="Nightmare Bonnie (Left Hall)">
+        <img src="assets4/sprites/n_chica.png" title="Nightmare Chica (Right Hall)">
+        <img src="assets4/sprites/n_foxy.png" title="Nightmare Foxy (Closet)">
+        <img src="assets4/sprites/n_fredbear.png" title="Nightmare Fredbear (All 4 Locations)">
+        <img src="assets4/sprites/nightmare.png" title="Nightmare (Shadow Boss)">
+        <img src="assets4/sprites/plushtrap.png" title="Plushtrap Monchhichi">
+      </div>
+      <div style="margin-top:8px; font-size:18px; color:#aa7777; text-align:center;">
+        [A] Left Door • [W] Closet • [D] Right Door • [S] Bed/Back<br>
+        [SPACE / Z] Flashlight • [SHIFT / X] Hold Door Shut
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM NIGHT MODAL -->
+  <div id="custom-modal">
+    <h2 style="font-size:42px; color:#ff3333; letter-spacing:3px;">CUSTOM NIGHT — NIGHTMARE AI (0–20)</h2>
+    <div class="cn-grid" id="cn-grid"></div>
+    <div style="display:flex; gap:12px; margin-top:10px;">
+      <button class="act-btn" onclick="setAllCustomAI(20)">20/20/20/20 PRESET</button>
+      <button class="act-btn" style="background:#881111;" onclick="launchCustomNight()">START CUSTOM NIGHT</button>
+      <button class="act-btn" onclick="document.getElementById('custom-modal').style.display='none'">BACK</button>
+    </div>
+  </div>
+
+  <!-- NIGHT INTRO -->
+  <div id="night-intro">
+    <h2 id="intro-title">NIGHT 1</h2>
+    <p id="intro-sub">12:00 AM — LISTEN CLOSELY BEFORE SHINING YOUR LIGHT</p>
+  </div>
+
+  <!-- MAIN BEDROOM VIEW -->
+  <div id="room-view">
+    <img id="room-img" src="assets4/cams/bedroom_normal.jpg" alt="Room View">
+    <div id="flashlight-overlay"></div>
+
+    <!-- CENTER BEDROOM CLICKABLE HOTSPOTS -->
+    <div id="hs-left" class="hotspot" onclick="goStation('left')">
+      <span>◀ LEFT DOOR [A]</span>
+      <small id="hs-left-hint" style="font-size:15px; color:#ffaaaa;">Check Bonnie / Fredbear</small>
+    </div>
+    <div id="hs-closet" class="hotspot" onclick="goStation('closet')">
+      <span>▲ CLOSET [W]</span>
+      <small id="hs-closet-hint" style="font-size:15px; color:#ffaaaa;">Check Foxy / Fredbear</small>
+    </div>
+    <div id="hs-right" class="hotspot" onclick="goStation('right')">
+      <span>RIGHT DOOR [D] ▶</span>
+      <small id="hs-right-hint" style="font-size:15px; color:#ffaaaa;">Check Chica / Fredbear</small>
+    </div>
+  </div>
+
+  <!-- TOP HUD -->
+  <div id="hud-top">
+    <div class="hud-box" id="audio-sense-panel">
+      <div class="sense-row">
+        <span>📍 LOCATION:</span>
+        <strong id="station-label" style="color:#ff8888; letter-spacing:1px;">CENTER BEDROOM</strong>
+      </div>
+      <div class="sense-row">
+        <span>👂 DOOR BREATHING:</span>
+        <span id="breath-indicator" class="breath-pill">— LISTEN AT DOOR —</span>
+      </div>
+      <div class="sense-row">
+        <span>🔊 LAST SOUND CUE:</span>
+        <span id="sound-cue-txt" style="color:#ffd27d; font-size:16px;">Quiet bedroom...</span>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:4px;">
+        <button class="act-btn" style="font-size:15px; padding:2px 8px;" onclick="toggleRadar()">📡 RADAR</button>
+        <button class="act-btn" id="speed-btn" style="font-size:15px; padding:2px 8px;" onclick="toggleSpeed()">⏩ SPEED: 1x</button>
+        <button class="act-btn" style="font-size:15px; padding:2px 8px;" onclick="quitToTitle()">🏠 MENU</button>
+      </div>
+    </div>
+
+    <div class="hud-box" style="text-align:right;">
+      <div class="clock-txt" id="clock-display">12 AM</div>
+      <div class="night-txt" id="night-display">NIGHT 1</div>
+      <div id="bonus-tag" style="font-size:15px; color:#88ff66; display:none;">+2 HRS PLUSHTRAP BONUS</div>
+    </div>
+  </div>
+
+  <!-- RADAR DEBUG / HELPER -->
+  <div id="radar-box"></div>
+
+  <!-- FUN WITH PLUSHTRAP HUD -->
+  <div id="plushtrap-hud">
+    <div style="font-size:32px; color:#ccff66; letter-spacing:2px;">FUN WITH PLUSHTRAP — STOP HIM ON THE "X"!</div>
+    <div style="font-size:24px; color:#fff;">TIME LEFT: <span id="pt-timer">45</span>s • LISTEN FOR FOOTSTEPS IN THE DARK, FLASH [SPACE/Z]</div>
+  </div>
+
+  <!-- BOTTOM CONTROLS -->
+  <div id="hud-bottom">
+    <!-- Dynamically populated based on station -->
+  </div>
+
+  <!-- JUMPSCARE LAYER -->
+  <div id="jumpscare-layer">
+    <img id="jumpscare-img" src="assets4/sprites/n_freddy.png" alt="Jumpscare">
+  </div>
+
+  <!-- END OVERLAY -->
+  <div id="end-overlay">
+    <div id="end-title">6:00 AM</div>
+    <div id="end-sub">You survived the night!</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+      <button class="act-btn" id="end-next-btn" onclick="nextNightOrPlushtrap()">PLAY FUN WITH PLUSHTRAP (+2 HRS)</button>
+      <button class="act-btn" onclick="quitToTitle()">RETURN TO TITLE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   FIVE NIGHTS AT ASHI'S 4 — AUTHENTIC FNaF 4 BEDROOM ENGINE
+   All 36 camera/room frames & 7 Nightmare Ashi sprites preloaded
+   ============================================================================ */
+const ALL_ASSETS = [
+  'assets4/cams/bedroom_normal.jpg',
+  'assets4/cams/bedroom_closet_open.jpg',
+  'assets4/cams/left_door_dark.jpg',
+  'assets4/cams/left_door_shut.jpg',
+  'assets4/cams/left_hall_empty.jpg',
+  'assets4/cams/left_hall_bonnie_far.jpg',
+  'assets4/cams/left_hall_bonnie_close.jpg',
+  'assets4/cams/left_hall_fredbear.jpg',
+  'assets4/cams/left_hall_nightmare.jpg',
+  'assets4/cams/right_door_dark.jpg',
+  'assets4/cams/right_door_shut.jpg',
+  'assets4/cams/right_hall_empty.jpg',
+  'assets4/cams/right_hall_chica_far.jpg',
+  'assets4/cams/right_hall_chica_close.jpg',
+  'assets4/cams/right_hall_fredbear.jpg',
+  'assets4/cams/right_hall_nightmare.jpg',
+  'assets4/cams/closet_dark.jpg',
+  'assets4/cams/closet_shut.jpg',
+  'assets4/cams/closet_plush.jpg',
+  'assets4/cams/closet_empty.jpg',
+  'assets4/cams/closet_foxy_1.jpg',
+  'assets4/cams/closet_foxy_2.jpg',
+  'assets4/cams/closet_fredbear.jpg',
+  'assets4/cams/closet_nightmare.jpg',
+  'assets4/cams/bed_empty.jpg',
+  'assets4/cams/bed_dark.jpg',
+  'assets4/cams/bed_freddles_1.jpg',
+  'assets4/cams/bed_freddles_2.jpg',
+  'assets4/cams/bed_freddles_3.jpg',
+  'assets4/cams/bed_fredbear.jpg',
+  'assets4/cams/bed_nightmare.jpg',
+  'assets4/cams/plushtrap_empty.jpg',
+  'assets4/cams/plushtrap_dark.jpg',
+  'assets4/cams/plushtrap_chair.jpg',
+  'assets4/cams/plushtrap_far.jpg',
+  'assets4/cams/plushtrap_x.jpg',
+  'assets4/sprites/n_freddy.png',
+  'assets4/sprites/n_bonnie.png',
+  'assets4/sprites/n_chica.png',
+  'assets4/sprites/n_foxy.png',
+  'assets4/sprites/n_fredbear.png',
+  'assets4/sprites/nightmare.png',
+  'assets4/sprites/plushtrap.png'
+];
+ALL_ASSETS.forEach(src => { const img = new Image(); img.src = src; });
+
+// Web Audio Synthesizer for FNaF 4 Spatial Audio Cues (Breathing, Footsteps, Laugh, Kitchen, Grandfather Clock, Jumpscare)
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSoundCue(type, pan = 0) {
+  try {
+    ensureAudio();
+    const now = audioCtx.currentTime;
+    const panner = audioCtx.createStereoPanner ? audioCtx.createStereoPanner() : null;
+    if (panner) { panner.pan.value = Math.max(-1, Math.min(1, pan)); panner.connect(audioCtx.destination); }
+    const dest = panner || audioCtx.destination;
+
+    if (type === 'breath') {
+      // Low eerie hollow breathing right outside the door!
+      const bufSize = audioCtx.sampleRate * 0.75;
+      const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.sin((i / bufSize) * Math.PI);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass'; filter.frequency.value = 290; filter.Q.value = 3.2;
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.74);
+      src.connect(filter); filter.connect(gain); gain.connect(dest);
+      src.start(now);
+    } else if (type === 'footstep') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(95, now);
+      osc.frequency.exponentialRampToValueAtTime(36, now + 0.16);
+      gain.gain.setValueAtTime(0.26, now);
+      gain.gain.exponentialRampToValueAtTime(0.005, now + 0.17);
+      osc.connect(gain); gain.connect(dest);
+      osc.start(now); osc.stop(now + 0.18);
+    } else if (type === 'laugh') {
+      // Deep Fredbear/Nightmare laugh ("Hoh-hoh-hoh")
+      [0, 0.22, 0.44].forEach((offset, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(125 - idx * 12, now + offset);
+        osc.frequency.exponentialRampToValueAtTime(70, now + offset + 0.18);
+        gain.gain.setValueAtTime(0.20, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.008, now + offset + 0.19);
+        osc.connect(gain); gain.connect(dest);
+        osc.start(now + offset); osc.stop(now + offset + 0.2);
+      });
+    } else if (type === 'kitchen') {
+      // Chica's pots & pans clattering in the kitchen
+      [0, 0.12, 0.27].forEach(offset => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(520 + Math.random() * 380, now + offset);
+        gain.gain.setValueAtTime(0.09, now + offset);
+        gain.gain.exponentialRampToValueAtTime(0.005, now + offset + 0.1);
+        osc.connect(gain); gain.connect(dest);
+        osc.start(now + offset); osc.stop(now + offset + 0.11);
+      });
+    } else if (type === 'click') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.setValueAtTime(980, now);
+      gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.005, now + 0.04);
+      osc.connect(gain); gain.connect(dest);
+      osc.start(now); osc.stop(now + 0.045);
+    } else if (type === 'scare') {
+      // Nightmare multi-layered roar
+      [110, 165, 240, 390, 620].forEach(freq => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.linearRampToValueAtTime(freq * 1.35, now + 0.4);
+        osc.frequency.linearRampToValueAtTime(freq * 0.75, now + 1.15);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.008, now + 1.2);
+        osc.connect(gain); gain.connect(dest);
+        osc.start(now); osc.stop(now + 1.22);
+      });
+    } else if (type === 'chime') {
+      // Grandfather clock chime at 6 AM
+      [261.6, 329.6, 392.0, 523.2].forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now + i * 0.35);
+        gain.gain.setValueAtTime(0.22, now + i * 0.35);
+        gain.gain.exponentialRampToValueAtTime(0.005, now + i * 0.35 + 0.8);
+        osc.connect(gain); gain.connect(dest);
+        osc.start(now + i * 0.35); osc.stop(now + i * 0.35 + 0.85);
+      });
+    }
+  } catch (e) {}
+}
+
+// Title Showcase Flicker
+const showcaseSprites = [
+  'assets4/sprites/n_fredbear.png',
+  'assets4/sprites/n_freddy.png',
+  'assets4/sprites/n_bonnie.png',
+  'assets4/sprites/n_chica.png',
+  'assets4/sprites/n_foxy.png',
+  'assets4/sprites/nightmare.png'
+];
+let showcaseIdx = 0;
+setInterval(() => {
+  if (document.getElementById('title-screen').style.display !== 'none') {
+    if (Math.random() < 0.38) {
+      showcaseIdx = (showcaseIdx + 1) % showcaseSprites.length;
+      const el = document.getElementById('title-char-img');
+      el.style.opacity = (0.55 + Math.random() * 0.45).toFixed(2);
+      el.src = showcaseSprites[showcaseIdx];
+    }
+  }
+}, 900);
+
+// Saved Progress
+let savedNight = parseInt(localStorage.getItem('fnaa4_night') || '1', 10);
+let savedStars = parseInt(localStorage.getItem('fnaa4_stars') || '0', 10);
+let plushtrapBonusHours = 0; // +2 hours if player won Fun with Plushtrap!
+
+function updateMenuUI() {
+  document.getElementById('continue-btn').innerText = `CONTINUE (NIGHT ${Math.min(5, savedNight)})`;
+  document.getElementById('stars-display').innerText = '★'.repeat(Math.max(1, savedStars));
+}
+updateMenuUI();
+
+// Custom Night Sliders
+const CN_CHARS = [
+  { id: 'freddy',   name: 'Nightmare Freddy',   img: 'assets4/sprites/n_freddy.png',   val: 10 },
+  { id: 'bonnie',   name: 'Nightmare Bonnie',   img: 'assets4/sprites/n_bonnie.png',   val: 10 },
+  { id: 'chica',    name: 'Nightmare Chica',    img: 'assets4/sprites/n_chica.png',    val: 10 },
+  { id: 'foxy',     name: 'Nightmare Foxy',     img: 'assets4/sprites/n_foxy.png',     val: 10 },
+  { id: 'fredbear', name: 'Nightmare Fredbear', img: 'assets4/sprites/n_fredbear.png', val: 0 },
+  { id: 'nightmare',name: 'Nightmare (Shadow)', img: 'assets4/sprites/nightmare.png',  val: 0 }
+];
+
+function openCustomNight() {
+  const grid = document.getElementById('cn-grid');
+  grid.innerHTML = '';
+  CN_CHARS.forEach((c, idx) => {
+    grid.innerHTML += `
+      <div class="cn-card">
+        <img src="${c.img}" alt="${c.name}">
+        <h4>${c.name}</h4>
+        <div class="cn-ctrl">
+          <button class="cn-btn" onclick="adjCN(${idx}, -1)">-</button>
+          <span id="cn-val-${idx}">${c.val}</span>
+          <button class="cn-btn" onclick="adjCN(${idx}, 1)">+</button>
+        </div>
+      </div>`;
+  });
+  document.getElementById('custom-modal').style.display = 'flex';
+}
+function adjCN(idx, delta) {
+  CN_CHARS[idx].val = Math.max(0, Math.min(20, CN_CHARS[idx].val + delta));
+  document.getElementById(`cn-val-${idx}`).innerText = CN_CHARS[idx].val;
+}
+function setAllCustomAI(v) {
+  CN_CHARS.forEach((c, idx) => { c.val = v; document.getElementById(`cn-val-${idx}`).innerText = v; });
+}
+function launchCustomNight() {
+  document.getElementById('custom-modal').style.display = 'none';
+  startGame(8); // 8 = Custom Night
+}
+
+// ============================================================================
+// GAME STATE & AUTHENTIC FNaF 4 AI TABLES
+// ============================================================================
+let gameMode = 'none'; // 'night' | 'plushtrap' | 'none'
+let currentNight = 1;
+let currentHour = 0;   // 0=12AM, 1=1AM ... 6=6AM
+let nightElapsedSec = 0;
+let speedMult = 1;
+let showRadar = false;
+
+// Player Station & Actions
+let station = 'bedroom'; // 'bedroom' | 'left' | 'right' | 'closet' | 'bed'
+let flashOn = false;
+let doorHeld = false;
+let actionHoldSec = 0;
+
+// Animatronic Positions
+// leftPos:  0 = Clear, 1 = Far Left Hall, 2 = Breathing at Left Door!
+// rightPos: 0 = Clear, 1 = Far Right Hall, 2 = Breathing at Right Door!
+// closetStage: 0 = Empty, 1 = Plushie, 2 = Foxy Standing, 3 = Foxy Ready to Bite!
+// freddlesCount: 0..3 on the Bed (if reaches 4 -> Nightmare Freddy attacks!)
+// fbLoc: 'none' | 'left' | 'right' | 'closet' | 'bed'
+// fbDoorClose: boolean (when true, Fredbear/Nightmare is right at the door breathing!)
+let leftPos = 0;
+let rightPos = 0;
+let leftDoorWaitSec = 0;
+let rightDoorWaitSec = 0;
+let closetStage = 0;
+let freddlesCount = 0;
+let freddleAccumSec = 0;
+let fbLoc = 'none';
+let fbAtDoor = false;
+let fbAttackSec = 0;
+let bossType = 'none'; // 'none' | 'fredbear' | 'nightmare'
+
+// Hourly AI lookup (Authentic gradual progression so Night 1 is fair and tense)
+function getActiveAI(night, hour) {
+  if (night === 8) {
+    return {
+      freddy: CN_CHARS[0].val, bonnie: CN_CHARS[1].val,
+      chica: CN_CHARS[2].val,  foxy: CN_CHARS[3].val,
+      fredbear: CN_CHARS[4].val, nightmare: CN_CHARS[5].val
+    };
+  }
+  if (night === 5) {
+    // Night 5 is solo Nightmare Fredbear all night!
+    return { freddy: 0, bonnie: 0, chica: 0, foxy: 0, fredbear: 12 + hour, nightmare: 0 };
+  }
+  if (night === 6) {
+    // Night 6: Main 4 until 4 AM, then Nightmare Fredbear solo!
+    if (hour >= 4) return { freddy: 0, bonnie: 0, chica: 0, foxy: 0, fredbear: 16, nightmare: 0 };
+    return { freddy: 10 + hour, bonnie: 12 + hour, chica: 12 + hour, foxy: 10 + hour, fredbear: 0, nightmare: 0 };
+  }
+  if (night === 7) {
+    // Night 7 (Nightmare Mode): 20/20/20/20 until 4 AM, then NIGHTMARE solo!
+    if (hour >= 4) return { freddy: 0, bonnie: 0, chica: 0, foxy: 0, fredbear: 0, nightmare: 20 };
+    return { freddy: 18, bonnie: 18, chica: 18, foxy: 18, fredbear: 0, nightmare: 0 };
+  }
+  // Nights 1 - 4
+  const tables = {
+    1: [
+      { freddy: 1, bonnie: 1, chica: 1, foxy: 0 }, // 12 AM: peaceful intro
+      { freddy: 2, bonnie: 2, chica: 2, foxy: 0 }, // 1 AM
+      { freddy: 2, bonnie: 3, chica: 3, foxy: 1 }, // 2 AM
+      { freddy: 3, bonnie: 4, chica: 4, foxy: 2 }, // 3 AM
+      { freddy: 3, bonnie: 5, chica: 5, foxy: 2 }, // 4 AM
+      { freddy: 4, bonnie: 5, chica: 5, foxy: 3 }  // 5 AM
+    ],
+    2: [
+      { freddy: 3, bonnie: 5, chica: 5, foxy: 3 },
+      { freddy: 4, bonnie: 6, chica: 6, foxy: 4 },
+      { freddy: 5, bonnie: 7, chica: 7, foxy: 5 },
+      { freddy: 6, bonnie: 8, chica: 8, foxy: 6 },
+      { freddy: 6, bonnie: 9, chica: 9, foxy: 7 },
+      { freddy: 7, bonnie: 9, chica: 9, foxy: 7 }
+    ],
+    3: [
+      { freddy: 6, bonnie: 8,  chica: 8,  foxy: 6 },
+      { freddy: 7, bonnie: 9,  chica: 9,  foxy: 7 },
+      { freddy: 8, bonnie: 10, chica: 10, foxy: 8 },
+      { freddy: 9, bonnie: 11, chica: 11, foxy: 9 },
+      { freddy: 9, bonnie: 12, chica: 12, foxy: 10 },
+      { freddy: 10,bonnie: 12, chica: 12, foxy: 10 }
+    ],
+    4: [
+      { freddy: 8,  bonnie: 10, chica: 10, foxy: 9 },
+      { freddy: 9,  bonnie: 11, chica: 11, foxy: 10 },
+      { freddy: 10, bonnie: 12, chica: 12, foxy: 12 },
+      { freddy: 11, bonnie: 13, chica: 13, foxy: 13 },
+      { freddy: 12, bonnie: 14, chica: 14, foxy: 14 },
+      { freddy: 12, bonnie: 15, chica: 15, foxy: 14 }
+    ]
+  };
+  const row = (tables[night] || tables[1])[Math.min(5, hour)];
+  return { ...row, fredbear: 0, nightmare: 0 };
+}
+
+function continueGame() {
+  startGame(Math.min(5, savedNight));
+}
+
+function startGame(nightNum) {
+  ensureAudio();
+  currentNight = nightNum;
+  currentHour = plushtrapBonusHours; // 0 (12 AM) or 2 (2 AM if Plushtrap won!)
+  nightElapsedSec = currentHour * 45;
+  station = 'bedroom';
+  flashOn = false;
+  doorHeld = false;
+  actionHoldSec = 0;
+
+  leftPos = 0; rightPos = 0;
+  leftDoorWaitSec = 0; rightDoorWaitSec = 0;
+  closetStage = 0;
+  freddlesCount = 0; freddleAccumSec = 0;
+  fbLoc = 'none'; fbAtDoor = false; fbAttackSec = 0;
+  bossType = 'none';
+
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('end-overlay').style.display = 'none';
+  document.getElementById('jumpscare-layer').style.display = 'none';
+  document.getElementById('plushtrap-hud').style.display = 'none';
+  document.getElementById('hud-top').style.display = 'flex';
+  document.getElementById('bonus-tag').style.display = plushtrapBonusHours > 0 ? 'block' : 'none';
+
+  const intro = document.getElementById('night-intro');
+  const label = nightNum === 7 ? 'NIGHTMARE (NIGHT 7)' : (nightNum === 8 ? 'CUSTOM NIGHT' : `NIGHT ${nightNum}`);
+  document.getElementById('intro-title').innerText = label;
+  document.getElementById('intro-sub').innerText = plushtrapBonusHours > 0
+    ? '2:00 AM — PLUSHTRAP BONUS APPLIED!'
+    : '12:00 AM — LISTEN FOR BREATHING BEFORE FLASHING!';
+  intro.style.display = 'flex';
+  playSoundCue('click');
+
+  setTimeout(() => {
+    intro.style.display = 'none';
+    gameMode = 'night';
+    syncBossMode();
+    renderStation();
+    updateHUD();
+  }, 1900);
+}
+
+function syncBossMode() {
+  const ai = getActiveAI(currentNight, currentHour);
+  const newBoss = ai.nightmare > 0 ? 'nightmare' : (ai.fredbear > 0 ? 'fredbear' : 'none');
+  if (newBoss !== 'none' && bossType === 'none') {
+    // When Fredbear or Nightmare takes over (e.g. 4 AM on Night 6/7), clear regular animatronics!
+    bossType = newBoss;
+    leftPos = 0; rightPos = 0; closetStage = 0; freddlesCount = 0;
+    fbLoc = Math.random() < 0.5 ? 'left' : 'right';
+    fbAtDoor = false;
+    playSoundCue('laugh', 0);
+    setSoundCueText(`⚠️ ${bossType.toUpperCase()} HAS ENTERED THE HOUSE!`);
+  } else {
+    bossType = newBoss;
+  }
+}
+
+function setSoundCueText(msg) {
+  const el = document.getElementById('sound-cue-txt');
+  if (el) el.innerText = msg;
+}
+
+// ============================================================================
+// STATION NAVIGATION & CONTROLS
+// ============================================================================
+function goStation(target) {
+  if (gameMode !== 'night') return;
+  playSoundCue('footstep', target === 'left' ? -0.6 : (target === 'right' ? 0.6 : 0));
+  station = target;
+  flashOn = false;
+  doorHeld = false;
+  actionHoldSec = 0;
+
+  // If entering Left or Right door and someone is at pos 2, play breathing immediately!
+  if (station === 'left' && isBreathingAt('left')) {
+    playSoundCue('breath', -0.75);
+    setSoundCueText('🫁 Heavy breathing right outside Left Door!');
+  } else if (station === 'right' && isBreathingAt('right')) {
+    playSoundCue('breath', 0.75);
+    setSoundCueText('🫁 Heavy breathing right outside Right Door!');
+  }
+  renderStation();
+  updateHUD();
+}
+
+function isBreathingAt(side) {
+  if (bossType !== 'none') {
+    return fbLoc === side && fbAtDoor;
+  }
+  return side === 'left' ? (leftPos === 2) : (rightPos === 2);
+}
+
+function setFlashlight(state) {
+  if (gameMode === 'plushtrap') {
+    ptSetFlash(state);
+    return;
+  }
+  if (gameMode !== 'night') return;
+  if (state && doorHeld) return; // Can't shine light through a shut door
+  if (state !== flashOn) playSoundCue('click');
+  flashOn = state;
+
+  // Check instant FNaF 4 mistake: Shining light at Left/Right door while someone is breathing at the door!
+  if (flashOn && (station === 'left' || station === 'right')) {
+    if (isBreathingAt(station)) {
+      // Show close-up hallway frame briefly, then JUMPSCARE!
+      renderStation();
+      setTimeout(() => {
+        if (gameMode !== 'night') return;
+        if (bossType === 'nightmare') triggerJumpscare('nightmare', 'You flashed the light while Nightmare was breathing at the door!');
+        else if (bossType === 'fredbear') triggerJumpscare('n_fredbear', 'You flashed the light while Nightmare Fredbear was at the door!');
+        else if (station === 'left') triggerJumpscare('n_bonnie', 'Never shine your flashlight when you hear breathing at the Left Door!');
+        else triggerJumpscare('n_chica', 'Never shine your flashlight when you hear breathing at the Right Door!');
+      }, 280);
+      return;
+    }
+  }
+  renderStation();
+}
+
+function setDoorHold(state) {
+  if (gameMode !== 'night') return;
+  if (station !== 'left' && station !== 'right' && station !== 'closet') return;
+  if (state) flashOn = false;
+  if (state !== doorHeld) playSoundCue('footstep');
+  doorHeld = state;
+  actionHoldSec = 0;
+  renderStation();
+}
+
+function renderStation() {
+  const img = document.getElementById('room-img');
+  const flOverlay = document.getElementById('flashlight-overlay');
+  const hsL = document.getElementById('hs-left');
+  const hsC = document.getElementById('hs-closet');
+  const hsR = document.getElementById('hs-right');
+  const bot = document.getElementById('hud-bottom');
+
+  const inCenter = (station === 'bedroom' && gameMode === 'night');
+  hsL.style.display = inCenter ? 'flex' : 'none';
+  hsC.style.display = inCenter ? 'flex' : 'none';
+  hsR.style.display = inCenter ? 'flex' : 'none';
+
+  // Hotspot status hints in bedroom
+  document.getElementById('hs-closet-hint').innerText =
+    (closetStage >= 2 || fbLoc === 'closet') ? '⚠️ CLOSET DOOR MOVED!' : 'Check Foxy / Closet';
+
+  if (gameMode === 'plushtrap') {
+    flOverlay.style.opacity = ptFlash ? '1' : '0';
+    return;
+  }
+
+  flOverlay.style.opacity = flashOn ? '1' : '0';
+
+  if (station === 'bedroom') {
+    img.src = (closetStage >= 2 || fbLoc === 'closet')
+      ? 'assets4/cams/bedroom_closet_open.jpg'
+      : 'assets4/cams/bedroom_normal.jpg';
+    bot.innerHTML = `
+      <button class="act-btn" onclick="goStation('left')">◀ RUN LEFT DOOR [A]</button>
+      <button class="act-btn" onclick="goStation('closet')">▲ RUN TO CLOSET [W]</button>
+      <button class="act-btn" onclick="goStation('right')">RUN RIGHT DOOR [D] ▶</button>
+      <button class="act-btn flash-btn" onclick="goStation('bed')">▼ TURN TO BED [S] ${freddlesCount > 0 ? `(⚠️ ${freddlesCount})` : ''}</button>
+    `;
+  } else if (station === 'left') {
+    if (doorHeld) {
+      img.src = 'assets4/cams/left_door_shut.jpg';
+    } else if (flashOn) {
+      if (bossType !== 'none' && fbLoc === 'left') {
+        img.src = bossType === 'nightmare' ? 'assets4/cams/left_hall_nightmare.jpg' : 'assets4/cams/left_hall_fredbear.jpg';
+      } else if (leftPos === 2) {
+        img.src = 'assets4/cams/left_hall_bonnie_close.jpg';
+      } else if (leftPos === 1) {
+        img.src = 'assets4/cams/left_hall_bonnie_far.jpg';
+      } else {
+        img.src = 'assets4/cams/left_hall_empty.jpg';
+      }
+    } else {
+      img.src = 'assets4/cams/left_door_dark.jpg';
+    }
+    bot.innerHTML = `
+      <button class="act-btn flash-btn ${flashOn ? 'active' : ''}"
+        onmousedown="setFlashlight(true)" onmouseup="setFlashlight(false)" onmouseleave="setFlashlight(false)"
+        ontouchstart="setFlashlight(true);event.preventDefault()" ontouchend="setFlashlight(false)">
+        🔦 FLASH HALLWAY [SPACE/Z]
+      </button>
+      <button class="act-btn door-btn ${doorHeld ? 'active' : ''}"
+        onmousedown="setDoorHold(true)" onmouseup="setDoorHold(false)" onmouseleave="setDoorHold(false)"
+        ontouchstart="setDoorHold(true);event.preventDefault()" ontouchend="setDoorHold(false)">
+        🚪 HOLD LEFT DOOR SHUT [SHIFT/X]
+      </button>
+      <button class="act-btn" onclick="goStation('bedroom')">▼ STEP BACK TO BEDROOM [S]</button>
+    `;
+  } else if (station === 'right') {
+    if (doorHeld) {
+      img.src = 'assets4/cams/right_door_shut.jpg';
+    } else if (flashOn) {
+      if (bossType !== 'none' && fbLoc === 'right') {
+        img.src = bossType === 'nightmare' ? 'assets4/cams/right_hall_nightmare.jpg' : 'assets4/cams/right_hall_fredbear.jpg';
+      } else if (rightPos === 2) {
+        img.src = 'assets4/cams/right_hall_chica_close.jpg';
+      } else if (rightPos === 1) {
+        img.src = 'assets4/cams/right_hall_chica_far.jpg';
+      } else {
+        img.src = 'assets4/cams/right_hall_empty.jpg';
+      }
+    } else {
+      img.src = 'assets4/cams/right_door_dark.jpg';
+    }
+    bot.innerHTML = `
+      <button class="act-btn flash-btn ${flashOn ? 'active' : ''}"
+        onmousedown="setFlashlight(true)" onmouseup="setFlashlight(false)" onmouseleave="setFlashlight(false)"
+        ontouchstart="setFlashlight(true);event.preventDefault()" ontouchend="setFlashlight(false)">
+        🔦 FLASH HALLWAY [SPACE/Z]
+      </button>
+      <button class="act-btn door-btn ${doorHeld ? 'active' : ''}"
+        onmousedown="setDoorHold(true)" onmouseup="setDoorHold(false)" onmouseleave="setDoorHold(false)"
+        ontouchstart="setDoorHold(true);event.preventDefault()" ontouchend="setDoorHold(false)">
+        🚪 HOLD RIGHT DOOR SHUT [SHIFT/X]
+      </button>
+      <button class="act-btn" onclick="goStation('bedroom')">▼ STEP BACK TO BEDROOM [S]</button>
+    `;
+  } else if (station === 'closet') {
+    if (doorHeld) {
+      img.src = 'assets4/cams/closet_shut.jpg';
+    } else if (flashOn) {
+      if (bossType !== 'none' && fbLoc === 'closet') {
+        img.src = bossType === 'nightmare' ? 'assets4/cams/closet_nightmare.jpg' : 'assets4/cams/closet_fredbear.jpg';
+      } else if (closetStage === 3) {
+        img.src = 'assets4/cams/closet_foxy_2.jpg';
+      } else if (closetStage === 2) {
+        img.src = 'assets4/cams/closet_foxy_1.jpg';
+      } else if (closetStage === 1) {
+        img.src = 'assets4/cams/closet_plush.jpg';
+      } else {
+        img.src = 'assets4/cams/closet_empty.jpg';
+      }
+    } else {
+      img.src = 'assets4/cams/closet_dark.jpg';
+    }
+    bot.innerHTML = `
+      <button class="act-btn flash-btn ${flashOn ? 'active' : ''}"
+        onmousedown="setFlashlight(true)" onmouseup="setFlashlight(false)" onmouseleave="setFlashlight(false)"
+        ontouchstart="setFlashlight(true);event.preventDefault()" ontouchend="setFlashlight(false)">
+        🔦 FLASH CLOSET [SPACE/Z]
+      </button>
+      <button class="act-btn door-btn ${doorHeld ? 'active' : ''}"
+        onmousedown="setDoorHold(true)" onmouseup="setDoorHold(false)" onmouseleave="setDoorHold(false)"
+        ontouchstart="setDoorHold(true);event.preventDefault()" ontouchend="setDoorHold(false)">
+        🚪 HOLD CLOSET SHUT [SHIFT/X]
+      </button>
+      <button class="act-btn" onclick="goStation('bedroom')">▼ STEP BACK TO BEDROOM [S]</button>
+    `;
+  } else if (station === 'bed') {
+    if (flashOn) {
+      if (bossType !== 'none' && fbLoc === 'bed') {
+        img.src = bossType === 'nightmare' ? 'assets4/cams/bed_nightmare.jpg' : 'assets4/cams/bed_fredbear.jpg';
+      } else if (freddlesCount >= 3) {
+        img.src = 'assets4/cams/bed_freddles_3.jpg';
+      } else if (freddlesCount === 2) {
+        img.src = 'assets4/cams/bed_freddles_2.jpg';
+      } else if (freddlesCount === 1) {
+        img.src = 'assets4/cams/bed_freddles_1.jpg';
+      } else {
+        img.src = 'assets4/cams/bed_empty.jpg';
+      }
+    } else {
+      img.src = 'assets4/cams/bed_dark.jpg';
+    }
+    bot.innerHTML = `
+      <button class="act-btn flash-btn ${flashOn ? 'active' : ''}"
+        onmousedown="setFlashlight(true)" onmouseup="setFlashlight(false)" onmouseleave="setFlashlight(false)"
+        ontouchstart="setFlashlight(true);event.preventDefault()" ontouchend="setFlashlight(false)">
+        🔦 SHINE FLASHLIGHT ON BED [SPACE/Z]
+      </button>
+      <button class="act-btn" onclick="goStation('bedroom')">▲ TURN BACK TO BEDROOM [S/W]</button>
+    `;
+  }
+}
+
+function updateHUD() {
+  document.getElementById('clock-display').innerText = currentHour === 0 ? '12 AM' : `${currentHour} AM`;
+  document.getElementById('night-display').innerText =
+    currentNight === 7 ? 'NIGHTMARE' : (currentNight === 8 ? 'CUSTOM NIGHT' : `NIGHT ${currentNight}`);
+
+  const stMap = {
+    bedroom: 'CENTER BEDROOM',
+    left: 'LEFT DOORWAY',
+    right: 'RIGHT DOORWAY',
+    closet: 'CENTER CLOSET',
+    bed: 'LOOKING AT BED'
+  };
+  document.getElementById('station-label').innerText = stMap[station] || 'BEDROOM';
+
+  const breathEl = document.getElementById('breath-indicator');
+  if (station === 'left' || station === 'right') {
+    if (isBreathingAt(station)) {
+      breathEl.className = 'breath-pill danger';
+      breathEl.innerText = '⚠️ BREATHING! SHUT DOOR!';
+    } else {
+      breathEl.className = 'breath-pill safe';
+      breathEl.innerText = '✓ QUIET (SAFE TO FLASH)';
+    }
+  } else {
+    breathEl.className = 'breath-pill';
+    breathEl.innerText = '— GO TO DOOR TO LISTEN —';
+  }
+
+  const radar = document.getElementById('radar-box');
+  if (showRadar && gameMode === 'night') {
+    radar.style.display = 'block';
+    const ai = getActiveAI(currentNight, currentHour);
+    if (bossType !== 'none') {
+      radar.innerHTML = `
+        <strong>📡 ${bossType.toUpperCase()} RADAR (AI ${bossType === 'nightmare' ? ai.nightmare : ai.fredbear})</strong><br>
+        Location: <b>${fbLoc.toUpperCase()}</b> ${fbAtDoor ? '(⚠️ AT DOOR!)' : ''}<br>
+        Attack Timer: ${(fbAttackSec).toFixed(1)}s
+      `;
+    } else {
+      const lTxt = ['Clear', 'Far Hall (Flash!)', '⚠️ AT DOOR (Shut Door!)'][leftPos];
+      const rTxt = ['Clear', 'Far Hall (Flash!)', '⚠️ AT DOOR (Shut Door!)'][rightPos];
+      const cTxt = ['Empty', 'Plushie', 'Foxy Inside', '⚠️ Foxy Ready (Shut!)'][closetStage];
+      radar.innerHTML = `
+        <strong>📡 NIGHTMARE RADAR (HR ${currentHour})</strong><br>
+        Left (Bonnie AI ${ai.bonnie}): ${lTxt}<br>
+        Right (Chica AI ${ai.chica}): ${rTxt}<br>
+        Closet (Foxy AI ${ai.foxy}): ${cTxt}<br>
+        Bed (Freddles AI ${ai.freddy}): ${freddlesCount} / 3 Mini-Ashis
+      `;
+    }
+  } else {
+    radar.style.display = 'none';
+  }
+}
+
+// ============================================================================
+// MAIN GAME LOOP (100ms ticks)
+// ============================================================================
+let aiTickAccum = 0;
+let breathLoopAccum = 0;
+
+setInterval(() => {
+  if (gameMode === 'plushtrap') {
+    tickPlushtrap(0.1);
+    return;
+  }
+  if (gameMode !== 'night') return;
+
+  const dt = 0.1 * speedMult;
+  nightElapsedSec += dt;
+
+  const newHour = Math.min(6, Math.floor(nightElapsedSec / 45));
+  if (newHour !== currentHour) {
+    currentHour = newHour;
+    if (currentHour >= 6) {
+      winNight();
+      return;
+    }
+    syncBossMode();
+  }
+
+  // 1. Continuous Player Action Resolution (Flashlight / Holding Door)
+  if (station === 'left') {
+    if (doorHeld) {
+      actionHoldSec += dt;
+      if (actionHoldSec >= 1.5) {
+        if (bossType !== 'none' && fbLoc === 'left') {
+          fbLoc = 'none'; fbAtDoor = false; fbAttackSec = 0;
+          playSoundCue('footstep', -0.7);
+          setSoundCueText('👣 Heavy footsteps walked away from Left Door!');
+        } else if (leftPos > 0) {
+          leftPos = 0; leftDoorWaitSec = 0;
+          playSoundCue('footstep', -0.7);
+          setSoundCueText('👣 Bonnie walked away from Left Door!');
+        }
+        actionHoldSec = 0;
+      }
+    } else if (flashOn && !isBreathingAt('left')) {
+      actionHoldSec += dt;
+      if (actionHoldSec >= 0.75) {
+        if (bossType !== 'none' && fbLoc === 'left' && !fbAtDoor) {
+          fbLoc = 'none'; fbAttackSec = 0;
+          playSoundCue('footstep', -0.7);
+          setSoundCueText('🔦 Flashed Fredbear away from Left Hall!');
+          renderStation();
+        } else if (leftPos === 1) {
+          leftPos = 0;
+          playSoundCue('footstep', -0.7);
+          setSoundCueText('🔦 Flashed Nightmare Bonnie back down Left Hall!');
+          renderStation();
+        }
+        actionHoldSec = 0;
+      }
+    }
+  } else if (station === 'right') {
+    if (doorHeld) {
+      actionHoldSec += dt;
+      if (actionHoldSec >= 1.5) {
+        if (bossType !== 'none' && fbLoc === 'right') {
+          fbLoc = 'none'; fbAtDoor = false; fbAttackSec = 0;
+          playSoundCue('footstep', 0.7);
+          setSoundCueText('👣 Heavy footsteps walked away from Right Door!');
+        } else if (rightPos > 0) {
+          rightPos = 0; rightDoorWaitSec = 0;
+          playSoundCue('footstep', 0.7);
+          setSoundCueText('👣 Chica walked away from Right Door!');
+        }
+        actionHoldSec = 0;
+      }
+    } else if (flashOn && !isBreathingAt('right')) {
+      actionHoldSec += dt;
+      if (actionHoldSec >= 0.75) {
+        if (bossType !== 'none' && fbLoc === 'right' && !fbAtDoor) {
+          fbLoc = 'none'; fbAttackSec = 0;
+          playSoundCue('footstep', 0.7);
+          setSoundCueText('🔦 Flashed Fredbear away from Right Hall!');
+          renderStation();
+        } else if (rightPos === 1) {
+          rightPos = 0;
+          playSoundCue('footstep', 0.7);
+          setSoundCueText('🔦 Flashed Nightmare Chica back down Right Hall!');
+          renderStation();
+        }
+        actionHoldSec = 0;
+      }
+    }
+  } else if (station === 'closet') {
+    if (doorHeld) {
+      actionHoldSec += dt;
+      if (actionHoldSec >= 1.6) {
+        if (bossType !== 'none' && fbLoc === 'closet') {
+          fbLoc = Math.random() < 0.5 ? 'left' : 'right';
+          fbAtDoor = false; fbAttackSec = 0;
+          playSoundCue('footstep', fbLoc === 'left' ? -0.7 : 0.7);
+          setSoundCueText(`👣 ${bossType.toUpperCase()} left the Closet!`);
+          renderStation();
+        } else if (closetStage > 1) {
+          closetStage--;
+          playSoundCue('footstep', 0);
+          setSoundCueText(closetStage === 1 ? '🧸 Foxy turned back into a harmless plushie!' : '🚪 Pushed Foxy back inside the closet!');
+        }
+        actionHoldSec = 0;
+      }
+    }
+  } else if (station === 'bed') {
+    if (flashOn) {
+      actionHoldSec += dt;
+      if (bossType !== 'none' && fbLoc === 'bed') {
+        if (actionHoldSec >= 1.4) {
+          fbLoc = Math.random() < 0.5 ? 'left' : 'right';
+          fbAtDoor = false; fbAttackSec = 0;
+          playSoundCue('footstep', fbLoc === 'left' ? -0.7 : 0.7);
+          setSoundCueText(`🔦 Scared ${bossType.toUpperCase()} off the Bed!`);
+          actionHoldSec = 0;
+          renderStation();
+        }
+      } else if (freddlesCount > 0 && actionHoldSec >= 0.55) {
+        freddlesCount--;
+        actionHoldSec = 0;
+        playSoundCue('footstep', 0);
+        setSoundCueText(freddlesCount === 0 ? '🔦 All Mini-Ashis scattered off the Bed!' : `🔦 Scared a Mini-Ashi off the Bed (${freddlesCount} left)`);
+        renderStation();
+      }
+    }
+  }
+
+  // Periodic breathing sound while standing at a door with an animatronic at pos 2
+  breathLoopAccum += dt;
+  if (breathLoopAccum >= 2.2) {
+    breathLoopAccum = 0;
+    if ((station === 'left' || station === 'right') && !doorHeld && isBreathingAt(station)) {
+      playSoundCue('breath', station === 'left' ? -0.75 : 0.75);
+    }
+  }
+
+  // 2. Danger Timers (Waiting too long while animatronic is at door / bed / closet)
+  if (bossType !== 'none') {
+    if (fbLoc !== 'none') {
+      fbAttackSec += dt;
+      const limit = bossType === 'nightmare' ? 9.5 : 13.0;
+      if (fbAttackSec >= limit) {
+        triggerJumpscare(bossType === 'nightmare' ? 'nightmare' : 'n_fredbear',
+          `${bossType === 'nightmare' ? 'Nightmare' : 'Nightmare Fredbear'} attacked from the ${fbLoc.toUpperCase()}!`);
+        return;
+      }
+    }
+  } else {
+    if (leftPos === 2 && !(station === 'left' && doorHeld)) {
+      leftDoorWaitSec += dt;
+      if (leftDoorWaitSec >= 14.5) {
+        triggerJumpscare('n_bonnie', 'Nightmare Bonnie crept in through the Left Door!');
+        return;
+      }
+    }
+    if (rightPos === 2 && !(station === 'right' && doorHeld)) {
+      rightDoorWaitSec += dt;
+      if (rightDoorWaitSec >= 14.5) {
+        triggerJumpscare('n_chica', 'Nightmare Chica crept in through the Right Door!');
+        return;
+      }
+    }
+    if (freddlesCount >= 3 && !(station === 'bed' && flashOn)) {
+      freddleAccumSec += dt;
+      if (freddleAccumSec >= 11.0) {
+        triggerJumpscare('n_freddy', 'Too many Mini-Ashis accumulated on the Bed!');
+        return;
+      }
+    } else {
+      freddleAccumSec = 0;
+    }
+  }
+
+  // 3. AI Movement Step every 4.2 seconds
+  aiTickAccum += dt;
+  if (aiTickAccum >= 4.2) {
+    aiTickAccum = 0;
+    stepNightmareAI();
+  }
+
+  updateHUD();
+}, 100);
+
+function stepNightmareAI() {
+  const ai = getActiveAI(currentNight, currentHour);
+
+  // BOSS MODE (Nightmare Fredbear or Nightmare)
+  if (bossType !== 'none') {
+    const bossAI = bossType === 'nightmare' ? ai.nightmare : ai.fredbear;
+    if (Math.random() * 20 < bossAI) {
+      if (fbLoc === 'none') {
+        const locs = ['left', 'right', 'closet', 'bed'];
+        fbLoc = locs[Math.floor(Math.random() * locs.length)];
+        fbAtDoor = false;
+        fbAttackSec = 0;
+        if (fbLoc === 'left' || fbLoc === 'right') {
+          playSoundCue('footstep', fbLoc === 'left' ? -0.8 : 0.8);
+          setSoundCueText(`👣 Heavy footsteps moved to ${fbLoc.toUpperCase()} Hallway!`);
+        } else {
+          playSoundCue('laugh', 0);
+          setSoundCueText(`😈 Deep laugh echoed from the ${fbLoc.toUpperCase()}!`);
+        }
+      } else if ((fbLoc === 'left' || fbLoc === 'right') && !fbAtDoor) {
+        // Step closer to the door!
+        fbAtDoor = true;
+        playSoundCue('footstep', fbLoc === 'left' ? -0.85 : 0.85);
+        setSoundCueText(`👣 Heavy footsteps stopped right outside ${fbLoc.toUpperCase()} Door!`);
+      }
+      renderStation();
+    }
+    return;
+  }
+
+  // REGULAR ANIMATRONICS (Nights 1–4, Night 6/7 before 4 AM, Custom Night)
+  // A. Nightmare Freddy (Bed Freddles)
+  if (ai.freddy > 0 && !(station === 'bed' && flashOn)) {
+    if (Math.random() * 22 < ai.freddy) {
+      if (freddlesCount < 3) {
+        freddlesCount++;
+        if (freddlesCount === 3) {
+          setSoundCueText('🛏️ High-pitched screeching behind you on the Bed!');
+        }
+      }
+    }
+  }
+
+  // B. Nightmare Bonnie (Left Hallway)
+  if (ai.bonnie > 0 && !(station === 'left' && (doorHeld || flashOn))) {
+    if (Math.random() * 22 < ai.bonnie) {
+      if (leftPos === 0) {
+        leftPos = 1;
+        playSoundCue('footstep', -0.75);
+        setSoundCueText('👣 Footsteps in the Left Hallway...');
+      } else if (leftPos === 1) {
+        leftPos = 2;
+        leftDoorWaitSec = 0;
+        playSoundCue('footstep', -0.85);
+        setSoundCueText('👣 Something approached the Left Door (Listen before flashing!)');
+      }
+    }
+  }
+
+  // C. Nightmare Chica (Right Hallway + Kitchen Clatter)
+  if (ai.chica > 0 && !(station === 'right' && (doorHeld || flashOn))) {
+    if (Math.random() * 22 < ai.chica) {
+      if (rightPos === 0) {
+        if (Math.random() < 0.35) {
+          playSoundCue('kitchen', 0.65);
+          setSoundCueText('🍳 Pots & pans clattering in the Kitchen (Right side)');
+        } else {
+          rightPos = 1;
+          playSoundCue('footstep', 0.75);
+          setSoundCueText('👣 Footsteps in the Right Hallway...');
+        }
+      } else if (rightPos === 1) {
+        rightPos = 2;
+        rightDoorWaitSec = 0;
+        playSoundCue('footstep', 0.85);
+        setSoundCueText('👣 Something approached the Right Door (Listen before flashing!)');
+      }
+    }
+  }
+
+  // D. Nightmare Foxy (Sneaks into Closet & advances stages)
+  if (ai.foxy > 0 && !(station === 'closet' && doorHeld)) {
+    if (Math.random() * 23 < ai.foxy) {
+      if (closetStage === 0) {
+        // Foxy sneaks into the closet if player isn't watching the bedroom center
+        closetStage = 2;
+        playSoundCue('footstep', 0);
+        setSoundCueText('🚪 The Closet doors creaked open!');
+        renderStation();
+      } else if (closetStage === 1) {
+        closetStage = 2;
+      } else if (closetStage === 2) {
+        closetStage = 3;
+        playSoundCue('footstep', 0);
+        setSoundCueText('🦊 Movement inside the Closet — hold it shut!');
+      } else if (closetStage === 3 && station !== 'closet') {
+        triggerJumpscare('n_foxy', 'Nightmare Foxy lunged out of the Closet!');
+      }
+    }
+  }
+}
+
+// ============================================================================
+// FUN WITH PLUSHTRAP INTERMISSION MINIGAME
+// ============================================================================
+let ptPos = 0; // 0 = Chair, 1 = Far Hallway, 2 = ON THE "X"!, 3 = Too Close (Jumpscare)
+let ptFlash = false;
+let ptTimeLeft = 45;
+let ptMoveAccum = 0;
+let ptFromWin = false;
+
+function startPlushtrapMinigame(fromNightWin) {
+  ensureAudio();
+  ptFromWin = fromNightWin;
+  gameMode = 'plushtrap';
+  ptPos = 0;
+  ptFlash = false;
+  ptTimeLeft = 45;
+  ptMoveAccum = 0;
+
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('end-overlay').style.display = 'none';
+  document.getElementById('hud-top').style.display = 'none';
+  document.getElementById('radar-box').style.display = 'none';
+  document.getElementById('plushtrap-hud').style.display = 'block';
+
+  renderPlushtrap();
+}
+
+function ptSetFlash(state) {
+  if (gameMode !== 'plushtrap') return;
+  if (state !== ptFlash) playSoundCue('click');
+  ptFlash = state;
+  renderPlushtrap();
+
+  if (ptFlash) {
+    if (ptPos === 2) {
+      // STOPPED RIGHT ON THE X!
+      gameMode = 'none';
+      plushtrapBonusHours = 2;
+      playSoundCue('chime');
+      setTimeout(() => {
+        showEndScreen('PLUSHTRAP STOPPED ON "X"!',
+          'Bonus Earned: You will start the next Night at 2:00 AM (+2 Hours)!', true);
+      }, 650);
+    } else if (ptPos === 1) {
+      // Flashed too early — Plushtrap retreats slightly
+      ptMoveAccum = 0;
+    }
+  }
+}
+
+function renderPlushtrap() {
+  const img = document.getElementById('room-img');
+  const bot = document.getElementById('hud-bottom');
+  document.getElementById('hs-left').style.display = 'none';
+  document.getElementById('hs-closet').style.display = 'none';
+  document.getElementById('hs-right').style.display = 'none';
+  document.getElementById('flashlight-overlay').style.opacity = ptFlash ? '1' : '0';
+
+  if (!ptFlash) {
+    img.src = 'assets4/cams/plushtrap_dark.jpg';
+  } else {
+    if (ptPos === 0) img.src = 'assets4/cams/plushtrap_chair.jpg';
+    else if (ptPos === 1) img.src = 'assets4/cams/plushtrap_far.jpg';
+    else if (ptPos === 2) img.src = 'assets4/cams/plushtrap_x.jpg';
+    else img.src = 'assets4/cams/plushtrap_empty.jpg';
+  }
+
+  bot.innerHTML = `
+    <button class="act-btn flash-btn ${ptFlash ? 'active' : ''}"
+      onmousedown="ptSetFlash(true)" onmouseup="ptSetFlash(false)" onmouseleave="ptSetFlash(false)"
+      ontouchstart="ptSetFlash(true);event.preventDefault()" ontouchend="ptSetFlash(false)">
+      🔦 FLASH LIGHT [SPACE / Z] — STOP HIM ON THE "X"!
+    </button>
+    <button class="act-btn" onclick="quitToTitle()">🏠 SKIP TO TITLE</button>
+  `;
+}
+
+function tickPlushtrap(dt) {
+  ptTimeLeft -= dt;
+  document.getElementById('pt-timer').innerText = Math.max(0, Math.ceil(ptTimeLeft));
+  if (ptTimeLeft <= 0) {
+    triggerJumpscare('plushtrap', 'Time ran out in Fun with Plushtrap!');
+    return;
+  }
+
+  if (!ptFlash) {
+    ptMoveAccum += dt;
+    if (ptMoveAccum >= 2.3) {
+      ptMoveAccum = 0;
+      ptPos++;
+      playSoundCue('footstep', (Math.random() - 0.5) * 0.6);
+      if (ptPos >= 3) {
+        triggerJumpscare('plushtrap', 'Plushtrap ran past the "X" in the dark!');
+      }
+    }
+  }
+}
+
+// ============================================================================
+// JUMPSCARE, WIN & NAVIGATION
+// ============================================================================
+function triggerJumpscare(spriteName, reason) {
+  gameMode = 'none';
+  flashOn = false; doorHeld = false;
+  playSoundCue('scare');
+  const layer = document.getElementById('jumpscare-layer');
+  const jImg = document.getElementById('jumpscare-img');
+  jImg.src = `assets4/sprites/${spriteName}.png`;
+  layer.style.display = 'flex';
+
+  setTimeout(() => {
+    layer.style.display = 'none';
+    showEndScreen('GAME OVER', reason, false);
+  }, 1350);
+}
+
+function winNight() {
+  gameMode = 'none';
+  plushtrapBonusHours = 0; // Reset consumed bonus
+  playSoundCue('chime');
+
+  if (currentNight < 5 && savedNight <= currentNight) {
+    savedNight = currentNight + 1;
+    localStorage.setItem('fnaa4_night', String(savedNight));
+  }
+  if (currentNight >= 5) {
+    savedStars = Math.max(savedStars, currentNight - 3);
+    localStorage.setItem('fnaa4_stars', String(savedStars));
+  }
+  updateMenuUI();
+
+  showEndScreen('6:00 AM', `You survived Night ${currentNight} of Five Nights at Ashi's 4!`, true);
+}
+
+function showEndScreen(title, sub, isWin) {
+  const ov = document.getElementById('end-overlay');
+  document.getElementById('end-title').innerText = title;
+  document.getElementById('end-title').style.color = isWin ? '#66ff66' : '#ff2222';
+  document.getElementById('end-sub').innerText = sub;
+  const nextBtn = document.getElementById('end-next-btn');
+  if (title.includes('PLUSHTRAP')) {
+    nextBtn.innerText = `START NIGHT ${Math.min(7, currentNight)} (AT 2:00 AM)`;
+    nextBtn.onclick = () => startGame(Math.min(7, currentNight));
+  } else if (isWin) {
+    nextBtn.innerText = '🔦 PLAY FUN WITH PLUSHTRAP (+2 HRS)';
+    nextBtn.onclick = () => { currentNight = Math.min(7, currentNight + 1); startPlushtrapMinigame(true); };
+  } else {
+    nextBtn.innerText = 'TRY AGAIN';
+    nextBtn.onclick = () => startGame(currentNight);
+  }
+  ov.style.display = 'flex';
+}
+
+function nextNightOrPlushtrap() {
+  startGame(currentNight);
+}
+
+function quitToTitle() {
+  gameMode = 'none';
+  document.getElementById('end-overlay').style.display = 'none';
+  document.getElementById('plushtrap-hud').style.display = 'none';
+  document.getElementById('title-screen').style.display = 'flex';
+  updateMenuUI();
+}
+
+function toggleRadar() {
+  showRadar = !showRadar;
+  updateHUD();
+}
+
+function toggleSpeed() {
+  speedMult = speedMult === 1 ? 3 : 1;
+  document.getElementById('speed-btn').innerText = `⏩ SPEED: ${speedMult}x`;
+}
+
+// ============================================================================
+// KEYBOARD SHORTCUTS
+// ============================================================================
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (gameMode === 'plushtrap') {
+    if (k === ' ' || k === 'z') { e.preventDefault(); ptSetFlash(true); }
+    return;
+  }
+  if (gameMode !== 'night') return;
+
+  if (k === 'a' || k === 'arrowleft') {
+    if (station === 'bedroom') goStation('left');
+  } else if (k === 'd' || k === 'arrowright') {
+    if (station === 'bedroom') goStation('right');
+  } else if (k === 'w' || k === 'arrowup') {
+    if (station === 'bedroom') goStation('closet');
+    else if (station === 'bed') goStation('bedroom');
+  } else if (k === 's' || k === 'arrowdown') {
+    if (station === 'bedroom') goStation('bed');
+    else goStation('bedroom');
+  } else if (k === ' ' || k === 'z') {
+    e.preventDefault();
+    if (!flashOn) setFlashlight(true);
+  } else if (k === 'shift' || k === 'x') {
+    e.preventDefault();
+    if (!doorHeld) setDoorHold(true);
+  }
+});
+
+window.addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  if (gameMode === 'plushtrap') {
+    if (k === ' ' || k === 'z') ptSetFlash(false);
+    return;
+  }
+  if (gameMode !== 'night') return;
+  if (k === ' ' || k === 'z') setFlashlight(false);
+  else if (k === 'shift' || k === 'x') setDoorHold(false);
+});
+</script>
+</body>
+</html>
