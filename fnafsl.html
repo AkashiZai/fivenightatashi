@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Five Nights at Ashi's: Sister Location — Full Story Edition</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; color: #eef6ff; font-family: 'Share Tech Mono', monospace; }
+
+  #game-wrap {
+    position: relative; width: 100vw; height: 100vh; max-width: 177.78vh; max-height: 56.25vw;
+    margin: auto; top: 50%; transform: translateY(-50%);
+    background: #02040a; overflow: hidden; border: 2px solid #1c355e;
+    box-shadow: 0 0 70px rgba(40, 120, 255, 0.25);
+  }
+
+  .crt-lines {
+    position: absolute; inset: 0; pointer-events: none; z-index: 92;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.76) 100%),
+      linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.32) 50%);
+    background-size: 100% 100%, 100% 4px;
+  }
+
+  /* TITLE SCREEN */
+  #title-screen {
+    position: absolute; inset: 0; z-index: 85; background: #03060f;
+    display: flex; align-items: center; justify-content: space-between; padding: 3% 5%;
+    background-image:
+      radial-gradient(circle at 75% 50%, rgba(220, 30, 70, 0.22) 0%, rgba(2, 5, 14, 0.96) 66%),
+      url('assets5/cams/control_module.jpg');
+    background-size: cover; background-position: center;
+  }
+  .title-left { z-index: 3; width: 55%; }
+  .title-h1 {
+    font-family: 'VT323', monospace;
+    font-size: clamp(32px, 4.4vw, 66px); line-height: 0.92; letter-spacing: 3px;
+    color: #ff2e55; text-shadow: 0 0 20px rgba(255, 40, 80, 0.8), 3px 3px 0 #150008;
+  }
+  .title-sub {
+    font-size: clamp(13px, 1.3vw, 19px); color: #7cb8ff; letter-spacing: 2.5px; margin: 6px 0 12px;
+  }
+  .menu-btn {
+    display: block; width: 100%; max-width: 470px; background: rgba(8, 18, 38, 0.86);
+    border: 1px solid #2b548e; border-left: 4px solid #ff2e55; color: #fff;
+    font-family: 'VT323', monospace; font-size: clamp(18px, 1.9vw, 27px);
+    padding: 4px 14px; margin: 4px 0; text-align: left; cursor: pointer; letter-spacing: 1.5px;
+    transition: 0.12s;
+  }
+  .menu-btn:hover { background: rgba(255, 46, 85, 0.25); border-color: #ff5577; transform: translateX(6px); }
+
+  .chapter-pills {
+    display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; max-width: 520px;
+  }
+  .chap-pill {
+    background: #0b182e; border: 1px solid #3566aa; color: #aaddff;
+    font-family: 'VT323', monospace; font-size: 17px; padding: 3px 9px; cursor: pointer;
+  }
+  .chap-pill:hover { background: #1e447a; color: #fff; }
+
+  .title-right {
+    width: 42%; height: 88%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; z-index: 3;
+  }
+  #title-showcase-img {
+    height: 62%; object-fit: contain;
+    filter: drop-shadow(0 0 26px rgba(255, 45, 95, 0.65)) contrast(1.25);
+  }
+  .cast-strip {
+    display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;
+    margin-top: 10px; background: rgba(6, 12, 26, 0.88); padding: 6px 10px;
+    border: 1px solid #2b548e; border-radius: 4px;
+  }
+  .cast-strip img {
+    width: 42px; height: 42px; object-fit: cover; object-position: top;
+    border: 1px solid #ff4466; border-radius: 3px;
+  }
+
+  /* VIEWPORT & INTERACTIVE OVERLAYS */
+  #stage-wrap {
+    position: absolute; inset: 0; background: #000; overflow: hidden;
+  }
+  #stage-img {
+    width: 100%; height: 100%; object-fit: fill; display: block;
+    transition: filter 0.14s, transform 0.18s;
+  }
+
+  /* TOP HUD */
+  #hud-top {
+    position: absolute; top: 10px; left: 14px; right: 14px; z-index: 55;
+    display: none; justify-content: space-between; align-items: flex-start; pointer-events: none;
+  }
+  .hud-card {
+    pointer-events: auto; background: rgba(6, 14, 30, 0.88);
+    border: 1px solid #2e5fa8; padding: 7px 13px; border-radius: 4px;
+    box-shadow: 0 0 18px rgba(0,0,0,0.85);
+  }
+  #scene-title { font-family: 'VT323', monospace; font-size: 26px; color: #ff5577; letter-spacing: 1.5px; }
+  #scene-task  { font-size: 14px; color: #99ccff; margin-top: 2px; }
+
+  /* HANDUNIT YELLOW KEYPAD OVERLAY */
+  #handunit-pad {
+    position: absolute; right: 6%; top: 18%; width: 270px; z-index: 60;
+    background: linear-gradient(145deg, #f3b818, #c48808);
+    border: 4px solid #4a3000; border-radius: 12px; padding: 12px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.85); color: #1a1200; display: none;
+  }
+  .hu-screen {
+    background: #1a281e; color: #66ff88; font-family: 'VT323', monospace;
+    font-size: 22px; padding: 6px 10px; border: 2px inset #0d1610; margin-bottom: 8px;
+    text-align: center; letter-spacing: 1.5px;
+  }
+  .hu-keys {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+  }
+  .hu-key {
+    background: #2b2210; color: #ffdd77; border: 1px solid #665020;
+    font-family: 'VT323', monospace; font-size: 20px; padding: 6px 0;
+    cursor: pointer; border-radius: 3px; text-align: center;
+  }
+  .hu-key:hover { background: #4a3a18; color: #fff; }
+
+  /* CONTROL MODULE BLUE LIGHT / RED SHOCK PADS */
+  #ctrl-pads {
+    position: absolute; inset: 0; pointer-events: none; z-index: 50; display: none;
+  }
+  .shock-box {
+    pointer-events: auto; position: absolute; top: 38%; width: 155px;
+    background: #1a2130; border: 3px solid #455a7c; border-radius: 8px; padding: 10px;
+    display: flex; flex-direction: column; gap: 8px; align-items: center;
+    box-shadow: 0 0 24px rgba(0,0,0,0.9);
+  }
+  #pad-left  { left: 4%; }
+  #pad-right { right: 4%; }
+  #pad-center { left: 50%; transform: translateX(-50%); top: 44%; }
+  .btn-light {
+    width: 100%; padding: 8px; background: #103c78; border: 2px solid #4da3ff;
+    color: #fff; font-family: 'VT323', monospace; font-size: 22px; cursor: pointer;
+    border-radius: 4px; letter-spacing: 1px;
+  }
+  .btn-light.active, .btn-light:hover { background: #2678e8; box-shadow: 0 0 16px #4da3ff; }
+  .btn-shock {
+    width: 100%; padding: 8px; background: #6e1218; border: 2px solid #ff4444;
+    color: #fff; font-family: 'VT323', monospace; font-size: 22px; cursor: pointer;
+    border-radius: 4px; letter-spacing: 1px;
+  }
+  .btn-shock:hover { background: #c81e28; box-shadow: 0 0 18px #ff3333; }
+
+  /* INTERACTIVE MINIGAME PANEL (CENTERED / FLOATING) */
+  #interactive-panel {
+    position: absolute; top: 14%; left: 50%; transform: translateX(-50%);
+    z-index: 58; background: rgba(6, 12, 24, 0.88); border: 2px solid #3c70b8;
+    border-radius: 8px; padding: 14px 20px; min-width: 420px; max-width: 780px;
+    display: none; flex-direction: column; align-items: center; gap: 10px;
+    box-shadow: 0 0 35px rgba(0,0,0,0.9);
+  }
+  .prog-bar-wrap {
+    width: 100%; height: 22px; background: #101a2b; border: 1px solid #3c70b8;
+    border-radius: 4px; overflow: hidden;
+  }
+  .prog-bar-fill {
+    height: 100%; width: 0%; background: linear-gradient(90deg, #28a745, #75ff90);
+    transition: width 0.12s;
+  }
+
+  /* SUBTITLE & CINEMATIC DIALOGUE BOX */
+  #dialogue-box {
+    position: absolute; bottom: 68px; left: 50%; transform: translateX(-50%);
+    width: 88%; max-width: 960px; z-index: 65;
+    background: rgba(4, 8, 18, 0.92); border: 1px solid #3b6db3;
+    border-left: 5px solid #ff2e55; padding: 10px 16px; border-radius: 4px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.9);
+  }
+  #speaker-name {
+    font-family: 'VT323', monospace; font-size: 23px; color: #ff6688;
+    letter-spacing: 1.5px; display: flex; justify-content: space-between;
+  }
+  #dialogue-text {
+    font-size: clamp(15px, 1.55vw, 21px); line-height: 1.38; color: #eef6ff; margin-top: 3px;
+  }
+
+  /* BOTTOM ACTION BAR */
+  #action-bar {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    z-index: 66; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; width: 94%;
+  }
+  .sl-btn {
+    background: rgba(12, 24, 48, 0.92); border: 2px solid #3c78cc; color: #fff;
+    font-family: 'VT323', monospace; font-size: clamp(19px, 2vw, 27px);
+    padding: 6px 16px; cursor: pointer; letter-spacing: 1.5px; border-radius: 4px;
+    transition: 0.1s;
+  }
+  .sl-btn:hover, .sl-btn.active { background: #1e5299; border-color: #88ccff; box-shadow: 0 0 14px rgba(100,180,255,0.5); }
+  .sl-btn.red { background: rgba(70, 10, 20, 0.92); border-color: #ff3355; }
+  .sl-btn.red:hover { background: #aa1830; }
+  .sl-btn.gold { background: rgba(65, 48, 8, 0.92); border-color: #ffcc33; color: #ffeeaa; }
+
+  /* 8-BIT CIRCUS BABY ICE CREAM MINIGAME CANVAS */
+  #minigame-canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%; z-index: 54;
+    background: #080412; display: none; image-rendering: pixelated;
+  }
+
+  /* JUMPSCARE LAYER */
+  #jumpscare-layer {
+    position: absolute; inset: 0; z-index: 96; background: #000;
+    display: none; align-items: center; justify-content: center; overflow: hidden;
+  }
+  #jumpscare-img {
+    width: 100%; height: 100%; object-fit: contain;
+    animation: slScare 0.05s infinite;
+  }
+  @keyframes slScare {
+    0%   { transform: scale(1.24) translate(-14px, 10px) rotate(-2deg); filter: contrast(1.6) brightness(1.2); }
+    50%  { transform: scale(1.36) translate(14px, -12px) rotate(2deg); filter: contrast(1.9) saturate(1.5); }
+    100% { transform: scale(1.28) translate(-8px, -10px) rotate(-1deg); }
+  }
+</style>
+</head>
+<body>
+<div id="game-wrap">
+  <div class="crt-lines"></div>
+
+  <!-- TITLE SCREEN -->
+  <div id="title-screen">
+    <div style="position:absolute; top:12px; right:18px; z-index:95; display:flex; gap:7px; flex-wrap:wrap;">
+      <a href="index.html" style="background:#221108; color:#ffaa44; border:2px solid #ffaa44; padding:4px 10px; font-family:'VT323',monospace; font-size:20px; text-decoration:none;">◀ PART 1</a>
+      <a href="fnaf2.html" style="background:#112233; color:#55ccff; border:2px solid #55ccff; padding:4px 10px; font-family:'VT323',monospace; font-size:20px; text-decoration:none;">◀ PART 2</a>
+      <a href="fnaf3.html" style="background:#18260c; color:#99ff44; border:2px solid #99ff44; padding:4px 10px; font-family:'VT323',monospace; font-size:20px; text-decoration:none;">◀ PART 3</a>
+      <a href="fnaf4.html" style="background:#2a0808; color:#ff6666; border:2px solid #ff4444; padding:4px 10px; font-family:'VT323',monospace; font-size:20px; text-decoration:none;">◀ PART 4</a>
+    </div>
+
+    <div class="title-left">
+      <div style="color:#ffcc33; font-size:26px; letter-spacing:5px; margin-bottom:2px;" id="sl-stars">★★★</div>
+      <div class="title-h1">FIVE NIGHTS AT ASHI'S<br>SISTER LOCATION</div>
+      <div class="title-sub">100% ORIGINAL CUTSCENES, DIALOGUE & STORY CAMPAIGN</div>
+
+      <button class="menu-btn" onclick="startStoryScene('prologue')">▶ START FULL STORY (PROLOGUE + NIGHTS 1–5)</button>
+      <button class="menu-btn" onclick="startStoryScene('n1_elev')">▶ NIGHT 1 — EGGS BENEDICT & CONTROLSHOCKS</button>
+      <button class="menu-btn" onclick="startStoryScene('n2_elev')">▶ NIGHT 2 — UNDER THE DESK, BALLORA & BREAKER ROOM</button>
+      <button class="menu-btn" onclick="startStoryScene('n3_elev')">▶ NIGHT 3 — FLASH BEACON & FUNTIME FREDDY SURGERY</button>
+      <button class="menu-btn" onclick="startStoryScene('n4_scoop')">▶ NIGHT 4 — THE SCOOPING ROOM & SPRINGLOCK SUIT</button>
+      <button class="menu-btn" onclick="startStoryScene('n5_elev')">▶ NIGHT 5 — CIRCUS BABY CODE, SCOOPER & PRIVATE ROOM</button>
+
+      <div style="margin-top:8px; font-size:13px; color:#88bbff;">🎬 JUMP DIRECTLY TO ANY CUTSCENE OR ENDING:</div>
+      <div class="chapter-pills">
+        <button class="chap-pill" onclick="startStoryScene('prologue')">Afton Prologue</button>
+        <button class="chap-pill" onclick="startStoryScene('tv_ep1')">TV Ep.1 (Vlad & Clara)</button>
+        <button class="chap-pill" onclick="startStoryScene('tv_ep2')">TV Ep.2</button>
+        <button class="chap-pill" onclick="startStoryScene('tv_ep3')">TV Ep.3</button>
+        <button class="chap-pill" onclick="startStoryScene('minigame_baby')">🍦 8-Bit Baby Minigame</button>
+        <button class="chap-pill" onclick="startStoryScene('n5_real_ending')">🩸 Real Ending (Scooper + Mirror)</button>
+        <button class="chap-pill" onclick="startStoryScene('n5_private_room')">🧈 Fake Ending (Ennard Boss + Ep.4)</button>
+      </div>
+    </div>
+
+    <div class="title-right">
+      <img id="title-showcase-img" src="assets5/sprites/baby.png" alt="Circus Baby Ashi">
+      <div class="cast-strip">
+        <img src="assets5/sprites/baby.png" title="Circus Baby Ashi">
+        <img src="assets5/sprites/ballora.png" title="Ballora Ashi">
+        <img src="assets5/sprites/funtime_freddy.png" title="Funtime Freddy Ashi">
+        <img src="assets5/sprites/bonbon.png" title="Bon-Bon Ashi">
+        <img src="assets5/sprites/funtime_foxy.png" title="Funtime Foxy Ashi">
+        <img src="assets5/sprites/ennard.png" title="Ennard Ashi">
+        <img src="assets5/sprites/bidybab.png" title="Bidybab Ashi">
+        <img src="assets5/sprites/minireena.png" title="Minireena Ashi">
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN STAGE VIEW -->
+  <div id="stage-wrap">
+    <img id="stage-img" src="assets5/cams/prologue_blueprint.jpg" alt="Sister Location Scene">
+    <canvas id="minigame-canvas" width="800" height="450"></canvas>
+  </div>
+
+  <!-- TOP HUD -->
+  <div id="hud-top">
+    <div class="hud-card">
+      <div id="scene-title">PROLOGUE — AFTON ROBOTICS</div>
+      <div id="scene-task">Listen to the opening interview</div>
+    </div>
+    <div class="hud-card" style="display:flex; gap:8px; align-items:center;">
+      <button class="sl-btn" style="font-size:17px; padding:3px 10px;" onclick="toggleVoiceTTS()" id="tts-btn">🔊 VOICE: ON</button>
+      <button class="sl-btn" style="font-size:17px; padding:3px 10px;" onclick="skipDialogueLine()">⏭ NEXT LINE</button>
+      <button class="sl-btn red" style="font-size:17px; padding:3px 10px;" onclick="returnToMenu()">🏠 MENU</button>
+    </div>
+  </div>
+
+  <!-- HANDUNIT KEYPAD -->
+  <div id="handunit-pad">
+    <div class="hu-screen" id="hu-screen-txt">ENTER NAME</div>
+    <div class="hu-keys" id="hu-keys-grid"></div>
+  </div>
+
+  <!-- PRIMARY CONTROL MODULE LIGHT & SHOCK PADS -->
+  <div id="ctrl-pads">
+    <div class="shock-box" id="pad-left">
+      <div style="font-size:14px; color:#aaccff;">BALLORA GALLERY</div>
+      <button class="btn-light" onclick="ctrlLight('left')">🔵 LIGHT</button>
+      <button class="btn-shock" onclick="ctrlShock('left')">⚡ SHOCK</button>
+    </div>
+    <div class="shock-box" id="pad-right">
+      <div style="font-size:14px; color:#aaccff;">FUNTIME AUDITORIUM</div>
+      <button class="btn-light" onclick="ctrlLight('right')">🔵 LIGHT</button>
+      <button class="btn-shock" onclick="ctrlShock('right')">⚡ SHOCK</button>
+    </div>
+    <div class="shock-box" id="pad-center" style="display:none;">
+      <div style="font-size:14px; color:#ffb3c6;">CIRCUS GALLERY</div>
+      <button class="btn-light" onclick="ctrlLight('circus')">🔵 LIGHT</button>
+      <button class="btn-shock" onclick="ctrlShock('circus')">⚡ SHOCK</button>
+    </div>
+  </div>
+
+  <!-- FLOATING INTERACTIVE GAMEPLAY PANEL -->
+  <div id="interactive-panel"></div>
+
+  <!-- CINEMATIC SUBTITLE BOX -->
+  <div id="dialogue-box" style="display:none;">
+    <div id="speaker-name">
+      <span id="spk-label">HANDUNIT</span>
+      <span id="spk-progress" style="font-size:17px; color:#88aacc;">1 / 1</span>
+    </div>
+    <div id="dialogue-text">...</div>
+  </div>
+
+  <!-- BOTTOM ACTION BAR -->
+  <div id="action-bar"></div>
+
+  <!-- JUMPSCARE LAYER -->
+  <div id="jumpscare-layer">
+    <img id="jumpscare-img" src="assets5/sprites/ennard.png" alt="Jumpscare">
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   FIVE NIGHTS AT ASHI'S: SISTER LOCATION — COMPLETE STORY & CUTSCENE ENGINE
+   100% Verbatim Cutscenes & Gameplay from the Original Game + Ashi Animatronics
+   ============================================================================ */
+const ALL_SL_ASSETS = [
+  'assets5/cams/prologue_blueprint.jpg',
+  'assets5/cams/elevator_descent.jpg',
+  'assets5/cams/elevator_open.jpg',
+  'assets5/cams/vent_crawl.jpg',
+  'assets5/cams/control_module.jpg',
+  'assets5/cams/ballora_window_dark.jpg',
+  'assets5/cams/ballora_window_empty.jpg',
+  'assets5/cams/ballora_window_stage.jpg',
+  'assets5/cams/ballora_window_tech.jpg',
+  'assets5/cams/foxy_window_dark.jpg',
+  'assets5/cams/foxy_window_empty.jpg',
+  'assets5/cams/foxy_window_stage.jpg',
+  'assets5/cams/foxy_window_tech.jpg',
+  'assets5/cams/circus_control.jpg',
+  'assets5/cams/circus_control_lit.jpg',
+  'assets5/cams/desk_hide_closed.jpg',
+  'assets5/cams/desk_hide_bidybab_1.jpg',
+  'assets5/cams/desk_hide_bidybab_2.jpg',
+  'assets5/cams/ballora_crawl_dark.jpg',
+  'assets5/cams/ballora_crawl_near.jpg',
+  'assets5/cams/breaker_empty.jpg',
+  'assets5/cams/breaker_freddy_far.jpg',
+  'assets5/cams/breaker_freddy_close.jpg',
+  'assets5/cams/auditorium_dark.jpg',
+  'assets5/cams/auditorium_flash_clear.jpg',
+  'assets5/cams/auditorium_flash_foxy_far.jpg',
+  'assets5/cams/auditorium_flash_foxy_close.jpg',
+  'assets5/cams/parts_freddy_closed.jpg',
+  'assets5/cams/parts_freddy_open.jpg',
+  'assets5/cams/parts_baby_night5.jpg',
+  'assets5/cams/springlock_baby_talk.jpg',
+  'assets5/cams/springlock_ballora_scooped.jpg',
+  'assets5/cams/springlock_gameplay.jpg',
+  'assets5/cams/scooping_room_ennard.jpg',
+  'assets5/cams/private_room_office.jpg',
+  'assets5/cams/private_room_ennard_left.jpg',
+  'assets5/cams/private_room_ennard_right.jpg',
+  'assets5/cams/private_room_ennard_vent.jpg',
+  'assets5/cams/tv_immortal_restless.jpg',
+  'assets5/cams/tv_ennard_fake_ending.jpg',
+  'assets5/cams/ending_bathroom_mirror.jpg',
+  'assets5/sprites/baby.png',
+  'assets5/sprites/ballora.png',
+  'assets5/sprites/funtime_freddy.png',
+  'assets5/sprites/bonbon.png',
+  'assets5/sprites/funtime_foxy.png',
+  'assets5/sprites/ennard.png',
+  'assets5/sprites/bidybab.png',
+  'assets5/sprites/minireena.png'
+];
+ALL_SL_ASSETS.forEach(src => { const im = new Image(); im.src = src; });
+
+// Title Screen Showcase Rotation
+const titleCast = [
+  'assets5/sprites/baby.png',
+  'assets5/sprites/ballora.png',
+  'assets5/sprites/funtime_freddy.png',
+  'assets5/sprites/funtime_foxy.png',
+  'assets5/sprites/ennard.png'
+];
+let titleCastIdx = 0;
+setInterval(() => {
+  if (document.getElementById('title-screen').style.display !== 'none') {
+    titleCastIdx = (titleCastIdx + 1) % titleCast.length;
+    document.getElementById('title-showcase-img').src = titleCast[titleCastIdx];
+  }
+}, 1400);
+
+// Audio & Speech Synthesis Engine
+let audioCtx = null;
+let ttsEnabled = true;
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSFX(type) {
+  try {
+    ensureAudio();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+
+    if (type === 'shock') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.linearRampToValueAtTime(620, now + 0.18);
+      osc.frequency.linearRampToValueAtTime(95, now + 0.45);
+      gain.gain.setValueAtTime(0.32, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.48);
+      osc.start(now); osc.stop(now + 0.5);
+    } else if (type === 'beep') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.008, now + 0.07);
+      osc.start(now); osc.stop(now + 0.08);
+    } else if (type === 'scooper') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.exponentialRampToValueAtTime(38, now + 0.85);
+      gain.gain.setValueAtTime(0.45, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.88);
+      osc.start(now); osc.stop(now + 0.9);
+    } else if (type === 'musicbox') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.16);
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.exponentialRampToValueAtTime(0.008, now + 0.34);
+      osc.start(now); osc.stop(now + 0.35);
+    } else if (type === 'popcorn') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320 + Math.random()*180, now);
+      gain.gain.setValueAtTime(0.16, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.09);
+      osc.start(now); osc.stop(now + 0.1);
+    } else if (type === 'scare') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.linearRampToValueAtTime(540, now + 0.35);
+      osc.frequency.linearRampToValueAtTime(120, now + 1.1);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 1.15);
+      osc.start(now); osc.stop(now + 1.18);
+    }
+  } catch (e) {}
+}
+
+function speakLine(speaker, text) {
+  if (!ttsEnabled || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    if (speaker.includes('BABY') || speaker.includes('ENNARD')) { u.pitch = 1.25; u.rate = 0.88; }
+    else if (speaker.includes('ELIZABETH')) { u.pitch = 1.55; u.rate = 0.95; }
+    else if (speaker.includes('HANDUNIT')) { u.pitch = 0.92; u.rate = 1.06; }
+    else if (speaker.includes('ANGSTY')) { u.pitch = 1.05; u.rate = 1.12; }
+    else if (speaker.includes('FREDDY')) { u.pitch = 1.35; u.rate = 1.08; }
+    else if (speaker.includes('VLAD') || speaker.includes('AFTON')) { u.pitch = 0.78; u.rate = 0.96; }
+    else if (speaker.includes('CLARA')) { u.pitch = 1.35; u.rate = 1.05; }
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+function toggleVoiceTTS() {
+  ttsEnabled = !ttsEnabled;
+  if (!ttsEnabled && ('speechSynthesis' in window)) window.speechSynthesis.cancel();
+  document.getElementById('tts-btn').innerText = `🔊 VOICE: ${ttsEnabled ? 'ON' : 'OFF'}`;
+}
+
+// ============================================================================
+// DIALOGUE QUEUE SYSTEM
+// ============================================================================
+let currentScene = '';
+let dialogueQueue = [];
+let dialogueIdx = 0;
+let onDialogueDone = null;
+let activeTimer = null;
+
+function clearTimers() {
+  if (activeTimer) { clearInterval(activeTimer); clearTimeout(activeTimer); activeTimer = null; }
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function playDialogueSequence(lines, callback) {
+  dialogueQueue = lines;
+  dialogueIdx = 0;
+  onDialogueDone = callback || null;
+  document.getElementById('dialogue-box').style.display = 'block';
+  showCurrentDialogueLine();
+}
+
+function showCurrentDialogueLine() {
+  if (dialogueIdx >= dialogueQueue.length) {
+    document.getElementById('dialogue-box').style.display = 'none';
+    if (onDialogueDone) {
+      const cb = onDialogueDone;
+      onDialogueDone = null;
+      cb();
+    }
+    return;
+  }
+  const item = dialogueQueue[dialogueIdx];
+  document.getElementById('spk-label').innerText = item.speaker;
+  document.getElementById('spk-progress').innerText = `${dialogueIdx + 1} / ${dialogueQueue.length}`;
+  document.getElementById('dialogue-text').innerText = item.text;
+  if (item.img) document.getElementById('stage-img').src = item.img;
+  if (item.sfx) playSFX(item.sfx);
+  speakLine(item.speaker, item.text);
+}
+
+function skipDialogueLine() {
+  if (dialogueQueue.length === 0) return;
+  playSFX('beep');
+  dialogueIdx++;
+  showCurrentDialogueLine();
+}
+
+function setStage(imgPath, title, task) {
+  document.getElementById('stage-img').src = imgPath;
+  if (title) document.getElementById('scene-title').innerText = title;
+  if (task) document.getElementById('scene-task').innerText = task;
+}
+
+function setActionButtons(html) {
+  document.getElementById('action-bar').innerHTML = html;
+}
+
+function hideAllInteractiveOverlays() {
+  document.getElementById('handunit-pad').style.display = 'none';
+  document.getElementById('ctrl-pads').style.display = 'none';
+  document.getElementById('interactive-panel').style.display = 'none';
+  document.getElementById('minigame-canvas').style.display = 'none';
+}
+
+function showHandUnitKeypad(promptLabel, correctedResult, onCorrected) {
+  const pad = document.getElementById('handunit-pad');
+  const scr = document.getElementById('hu-screen-txt');
+  const grid = document.getElementById('hu-keys-grid');
+  scr.innerText = promptLabel;
+  grid.innerHTML = '';
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ01'.split('');
+  letters.slice(0, 16).forEach(ch => {
+    const b = document.createElement('button');
+    b.className = 'hu-key';
+    b.innerText = ch;
+    b.onclick = () => {
+      playSFX('beep');
+      scr.innerText = `AUTOCORRECT: ${correctedResult}`;
+      setTimeout(() => {
+        pad.style.display = 'none';
+        onCorrected();
+      }, 750);
+    };
+    grid.appendChild(b);
+  });
+  pad.style.display = 'block';
+}
+
+function returnToMenu() {
+  clearTimers();
+  hideAllInteractiveOverlays();
+  document.getElementById('dialogue-box').style.display = 'none';
+  document.getElementById('hud-top').style.display = 'none';
+  document.getElementById('jumpscare-layer').style.display = 'none';
+  document.getElementById('title-screen').style.display = 'flex';
+}
+
+function triggerSLJumpscare(spriteFile, retryScene) {
+  clearTimers();
+  hideAllInteractiveOverlays();
+  playSFX('scare');
+  const layer = document.getElementById('jumpscare-layer');
+  document.getElementById('jumpscare-img').src = `assets5/sprites/${spriteFile}`;
+  layer.style.display = 'flex';
+  setTimeout(() => {
+    layer.style.display = 'none';
+    startStoryScene(retryScene);
+  }, 1350);
+}
+
+// ============================================================================
+// MASTER STORY & CUTSCENE ROUTER (100% VERBATIM TO ORIGINAL SISTER LOCATION)
+// ============================================================================
+function startStoryScene(sceneId) {
+  ensureAudio();
+  clearTimers();
+  hideAllInteractiveOverlays();
+  currentScene = sceneId;
+  document.getElementById('title-screen').style.display = 'none';
+  document.getElementById('hud-top').style.display = 'flex';
+  setActionButtons('');
+
+  // --------------------------------------------------------------------------
+  // 0. OPENING PROLOGUE CUTSCENE (Mr. Afton Interview + Elizabeth Afton)
+  // --------------------------------------------------------------------------
+  if (sceneId === 'prologue') {
+    setStage('assets5/cams/prologue_blueprint.jpg',
+      'OPENING PROLOGUE — AFTON ROBOTICS, LLC',
+      'Watch the opening interview cutscene (Click NEXT LINE or SPACE)');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'BOARD INTERVIEWER', text: "There's no doubting what you've achieved on a technical level. These are clearly state-of-the-art." },
+      { speaker: 'BOARD INTERVIEWER', text: "There are just certain design choices that were made for these robots that we don't fully understand. We were hoping that you could shed some light on those." },
+      { speaker: 'MR. WILLIAM AFTON', text: "She can dance, she can sing! She's equipped with a built-in helium tank for inflating balloons right at her fingertips." },
+      { speaker: 'MR. WILLIAM AFTON', text: "She can take song requests. She can even dispense ice cream." },
+      { speaker: 'BOARD INTERVIEWER', text: "With all due respect, those aren't the design choices we were curious about, Mr. Afton." },
+      { speaker: 'ELIZABETH AFTON', text: "Daddy, why won't you let me play with her?" }
+    ], () => startStoryScene('n1_elev'));
+  }
+
+  // --------------------------------------------------------------------------
+  // 1. NIGHT 1 — ELEVATOR ("EGGS BENEDICT") & PRIMARY CONTROL MODULE
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'n1_elev') {
+    setStage('assets5/cams/elevator_descent.jpg',
+      'NIGHT 1 — ELEVATOR DESCENT',
+      'Listen to HandUnit & enter your name on the keypad');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Welcome to the first day of your exciting new career! Whether you were approached at a job fair, read our ad in Screws, Bolts and Hairpins, or if this is the result of a dare, we welcome you." },
+      { speaker: 'HANDUNIT', text: "I will be your personal guide to help you get started. I'm a Model 5 of the Handyman's Robotics and Unit Repair System, but you can call me HandUnit." },
+      { speaker: 'HANDUNIT', text: "Please enter your name as seen above the keypad. This cannot be changed later, so please be careful." }
+    ], () => {
+      showHandUnitKeypad('ENTER NAME:', 'EGGS BENEDICT', () => {
+        playDialogueSequence([
+          { speaker: 'HANDUNIT', text: "It seems that you had some trouble with the keypad. I see what you were trying to type, and I will auto-correct it for you. One moment. Welcome: Eggs Benedict." },
+          { speaker: 'HANDUNIT', img: 'assets5/cams/elevator_open.jpg', text: "You can now open the elevator using that bright red and obvious button. Let's get to work!" },
+          { speaker: 'HANDUNIT', img: 'assets5/cams/vent_crawl.jpg', text: "Allow me to fill this somewhat frightening silence with some light-hearted banter. Unlike most entertainment venues, our robotic entertainers are rented out for private parties during the day." }
+        ], () => startStoryScene('n1_control'));
+      });
+    });
+  }
+
+  else if (sceneId === 'n1_control') {
+    setStage('assets5/cams/control_module.jpg',
+      'NIGHT 1 — PRIMARY CONTROL MODULE',
+      'Check Ballora Gallery (Left) and Funtime Auditorium (Right), then shock them back onto stage');
+    document.getElementById('ctrl-pads').style.display = 'block';
+    document.getElementById('pad-left').style.display = 'flex';
+    document.getElementById('pad-right').style.display = 'flex';
+    document.getElementById('pad-center').style.display = 'none';
+
+    window.n1State = { balloraFixed: false, foxyFixed: false, foxyShocks: 0 };
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "You are now in the Primary Control Module. View the window to your left. This is the Ballora Gallery party room and dance studio. Let's turn on the light [🔵 LIGHT] and see if Ballora Ashi is on stage." }
+    ]);
+  }
+
+  else if (sceneId === 'n1_circus') {
+    setStage('assets5/cams/circus_control.jpg',
+      'NIGHT 1 — CIRCUS GALLERY CONTROL MODULE',
+      'Administer 3 Controlled Shocks to Circus Baby Ashi');
+    document.getElementById('ctrl-pads').style.display = 'block';
+    document.getElementById('pad-left').style.display = 'none';
+    document.getElementById('pad-right').style.display = 'none';
+    document.getElementById('pad-center').style.display = 'flex';
+    window.n1CircusShocks = 0;
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Motion Trigger: Circus Gallery Vent. On the other side of the glass is Circus Baby's Auditorium. Let's check the light and encourage Circus Baby Ashi to cheer up with 3 Controlled Shocks!" }
+    ]);
+  }
+
+  // --------------------------------------------------------------------------
+  // END OF NIGHT 1 TV CUTSCENE — "THE IMMORTAL AND THE RESTLESS" EPISODE 1
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'tv_ep1') {
+    setStage('assets5/cams/tv_immortal_restless.jpg',
+      'CUTSCENE — THE IMMORTAL AND THE RESTLESS (EPISODE 1)',
+      'Eat popcorn [SPACE] while watching Vlad & Clara on TV');
+    setActionButtons(`
+      <button class="sl-btn gold" onclick="playSFX('popcorn')">🍿 EAT POPCORN</button>
+      <button class="sl-btn" onclick="skipDialogueLine()">▶ NEXT LINE [SPACE]</button>
+    `);
+
+    playDialogueSequence([
+      { speaker: 'TV ANNOUNCER', text: "Another day, another dramatic entry in the lives of Vlad and his distressed mistress! Where will they go? What will they do? All of that and more, happening now!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Clara, I tell you, the baby isn't mine!" },
+      { speaker: 'CLARA ASHI', text: "Count, I tell you that it is! You're the only vampire I've ever loved! And the baby turns his bottles into powdered milk!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "That doesn't mean anything." },
+      { speaker: 'CLARA ASHI', text: "He sleeps on the ceiling fan!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Upright or upside down, what does it matter?" },
+      { speaker: 'CLARA ASHI', text: "You need to be part of your son's life!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "I'm an old man, Clara! I can't be a father!" },
+      { speaker: 'CLARA ASHI', text: "Well then, at least pay your child support, you deadbeat!" },
+      { speaker: 'TV ANNOUNCER', text: "Will Vlad and his distressed mistress find common ground? Tune in next time!" },
+      { speaker: 'ELIZABETH AFTON', text: "Daddy, you let the other children go see her... why won't you let me go?" }
+    ], () => startStoryScene('n2_elev'));
+  }
+
+  // --------------------------------------------------------------------------
+  // 2. NIGHT 2 — ANGSTY TEEN, UNDER THE DESK (BIDYBABS), BALLORA CRAWL & BREAKER ROOM
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'n2_elev') {
+    setStage('assets5/cams/elevator_descent.jpg',
+      'NIGHT 2 — ELEVATOR DESCENT ("ANGSTY TEEN")',
+      'Select your companion voice on the HandUnit keypad');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Welcome back for another night of intellectual stimulation, pivotal career choices, and self-reflection on past mistakes." },
+      { speaker: 'HANDUNIT', text: "Using the keypad below, please select a new companion voice. For Male, press 1. For Female, press 2. For Text Only, press 3. For Other Options, press 4." }
+    ], () => {
+      showHandUnitKeypad('SELECT VOICE:', 'ANGSTY TEEN', () => {
+        playDialogueSequence([
+          { speaker: 'HANDUNIT', text: "It seems that you had some trouble with the keypad. I see what you were trying to type, and I will auto-correct it for you. Thank you for choosing: Angsty Teen." },
+          { speaker: 'ANGSTY TEEN', img: 'assets5/cams/vent_crawl.jpg', text: "The elevator stopped. You know the routine. You can get out now, or whatever. Funny story: a dead body was found in this vent once. Okay, so not that funny, but it's a story." },
+          { speaker: 'ANGSTY TEEN', img: 'assets5/cams/control_module.jpg', text: "Okay, let's start with your nightly chores. Check on Ballora and Funtime Foxy... C-c-corrupted—" },
+          { speaker: 'HANDUNIT', img: 'assets5/cams/circus_control.jpg', text: "There seems to have been a problem with the voice synthesizer. Default settings have been restored. Please proceed to Circus Baby's Auditorium." },
+          { speaker: 'HANDUNIT', sfx: 'shock', text: "There seems to be a power malfunction that is affecting our ability to properly motivate Baby. I will be offline momentarily. Security doors, vent locks, and oxygen are offline." },
+          { speaker: 'CIRCUS BABY ASHI', img: 'assets5/cams/circus_control_lit.jpg', text: "I don't recognize you. You are new. I remember this scenario, however. It's a strange thing to want to do, to come here." },
+          { speaker: 'CIRCUS BABY ASHI', text: "There is a space under the desk. Someone before you crafted it into a hiding place, and it worked for him. I recommend that you hurry, though. Just try not to make eye contact." }
+        ], () => startStoryScene('n2_desk'));
+      });
+    });
+  }
+
+  else if (sceneId === 'n2_desk') {
+    setStage('assets5/cams/desk_hide_closed.jpg',
+      'NIGHT 2 — UNDER THE DESK (BIDYBAB ASHI ENCOUNTER)',
+      'Click PULL DOOR SHUT repeatedly to keep the Bidybab Ashis from pulling the metal shield open!');
+    const panel = document.getElementById('interactive-panel');
+    panel.style.display = 'flex';
+    let doorStrength = 85;
+    let surviveSec = 16;
+
+    panel.innerHTML = `
+      <div style="font-size:22px; color:#ff88aa;">BIDYBAB ASHIS ARE PULLING THE DESK SHIELD! (${surviveSec}s LEFT)</div>
+      <div class="prog-bar-wrap"><div class="prog-bar-fill" id="desk-bar" style="width:${doorStrength}%;"></div></div>
+      <button class="sl-btn gold" onclick="window.pullDeskDoor()">✊ PULL METAL SHIELD SHUT [SPACE]</button>
+    `;
+    setActionButtons(`<button class="sl-btn gold" onclick="window.pullDeskDoor()">✊ PULL METAL SHIELD SHUT [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'BIDYBAB ASHI', text: "Hello in there? Someone is inside... Is it the same person? Knock, knock!" }
+    ]);
+
+    window.pullDeskDoor = () => {
+      doorStrength = Math.min(100, doorStrength + 14);
+      playSFX('beep');
+    };
+
+    activeTimer = setInterval(() => {
+      doorStrength -= 4.2;
+      surviveSec -= 0.25;
+      const bar = document.getElementById('desk-bar');
+      if (bar) bar.style.width = `${Math.max(0, doorStrength)}%`;
+
+      if (doorStrength > 65) document.getElementById('stage-img').src = 'assets5/cams/desk_hide_closed.jpg';
+      else if (doorStrength > 32) document.getElementById('stage-img').src = 'assets5/cams/desk_hide_bidybab_1.jpg';
+      else document.getElementById('stage-img').src = 'assets5/cams/desk_hide_bidybab_2.jpg';
+
+      if (doorStrength <= 0) {
+        triggerSLJumpscare('bidybab.png', 'n2_desk');
+        return;
+      }
+      if (surviveSec <= 0) {
+        clearTimers();
+        panel.style.display = 'none';
+        document.getElementById('stage-img').src = 'assets5/cams/desk_hide_closed.jpg';
+        playDialogueSequence([
+          { speaker: 'BIDYBAB ASHI', text: "She's watching us. We have to leave now. We will see you again soon." },
+          { speaker: 'CIRCUS BABY ASHI', text: "When your guide comes back online, he is going to tell you to crawl through Ballora Gallery as fast as you can to reach the Breaker Room. If you follow his instructions, you will die." },
+          { speaker: 'CIRCUS BABY ASHI', text: "When you crawl through Ballora Gallery, go slowly. She cannot see you, and can only listen for your movement. When you hear her music become louder, wait and be still." }
+        ], () => startStoryScene('n2_breaker'));
+      }
+    }, 250);
+  }
+
+  else if (sceneId === 'n2_breaker') {
+    setStage('assets5/cams/breaker_empty.jpg',
+      'NIGHT 2 — BALLORA GALLERY & BREAKER ROOM',
+      'Restore all 100% Facility Power while playing Bon-Bon Mascot Audio whenever Funtime Freddy Ashi gets close!');
+    const panel = document.getElementById('interactive-panel');
+    panel.style.display = 'flex';
+    let powerPct = 0;
+    let freddyDanger = 0; // 0 = Safe, 1 = Far, 2 = Close!
+
+    const updateBreakerUI = () => {
+      panel.innerHTML = `
+        <div style="font-size:22px; color:#75ff90;">⚡ BREAKER RESTORATION: ${Math.floor(powerPct)}%</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${powerPct}%;"></div></div>
+        <div style="font-size:17px; color:${freddyDanger === 2 ? '#ff4444' : '#ffd27d'};">
+          FUNTIME FREDDY DISTANCE: ${['SAFE IN DARK', 'APPROACHING (STAGE 1)', '⚠️ RIGHT IN FRONT OF YOU! PLAY MASCOT AUDIO!'][freddyDanger]}
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="sl-btn" onclick="window.stepBreaker()">🔧 HOLD / CLICK TO RESTORE POWER</button>
+          <button class="sl-btn gold" onclick="window.calmFreddy()">🔊 PLAY BON-BON MASCOT AUDIO</button>
+        </div>
+      `;
+    };
+    updateBreakerUI();
+    setActionButtons('');
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Motion Trigger: Breaker Room. You may now interface with the breaker control box. Feel free to disconnect and play the mascot audio if you feel you are in danger." },
+      { speaker: 'FUNTIME FREDDY ASHI', text: "Hey Bon-Bon! I think that's the birthday boy over there! We should go give him a surprise!" }
+    ]);
+
+    window.stepBreaker = () => {
+      powerPct = Math.min(100, powerPct + 12);
+      playSFX('beep');
+      if (powerPct >= 100) {
+        clearTimers();
+        panel.style.display = 'none';
+        playDialogueSequence([
+          { speaker: 'HANDUNIT', text: "Great job! This completes your tasks for the night. Please proceed back through the Ballora Gallery with care, and we'll see you back here tomorrow." },
+          { speaker: 'BALLORA ASHI', img: 'assets5/cams/ballora_crawl_near.jpg', sfx: 'musicbox', text: "Is someone there? I can hear someone creeping through my room... Perhaps not." }
+        ], () => startStoryScene('tv_ep2'));
+        return;
+      }
+      updateBreakerUI();
+    };
+
+    window.calmFreddy = () => {
+      playSFX('musicbox');
+      freddyDanger = Math.max(0, freddyDanger - 1);
+      speakLine('BONBON', "Calm down and go back to sleep! No one is here!");
+      document.getElementById('stage-img').src =
+        freddyDanger === 0 ? 'assets5/cams/breaker_empty.jpg' : 'assets5/cams/breaker_freddy_far.jpg';
+      updateBreakerUI();
+    };
+
+    activeTimer = setInterval(() => {
+      if (Math.random() < 0.45) {
+        freddyDanger++;
+        if (freddyDanger >= 3) {
+          triggerSLJumpscare('funtime_freddy.png', 'n2_breaker');
+          return;
+        }
+        document.getElementById('stage-img').src =
+          freddyDanger === 1 ? 'assets5/cams/breaker_freddy_far.jpg' : 'assets5/cams/breaker_freddy_close.jpg';
+        updateBreakerUI();
+      }
+    }, 2400);
+  }
+
+  // --------------------------------------------------------------------------
+  // END OF NIGHT 2 TV CUTSCENE — "THE IMMORTAL AND THE RESTLESS" EPISODE 2
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'tv_ep2') {
+    setStage('assets5/cams/tv_immortal_restless.jpg',
+      'CUTSCENE — THE IMMORTAL AND THE RESTLESS (EPISODE 2)',
+      'Watch Episode 2 of Vlad & Clara');
+    setActionButtons(`
+      <button class="sl-btn gold" onclick="playSFX('popcorn')">🍿 EAT POPCORN</button>
+      <button class="sl-btn" onclick="skipDialogueLine()">▶ NEXT LINE [SPACE]</button>
+    `);
+
+    playDialogueSequence([
+      { speaker: 'TV ANNOUNCER', text: "As the sun sets, so also does another chapter in the saga of love lost between Vlad and his distressed mistress! Can they be reconciled? Happening now!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Clara, the baby isn't mine!" },
+      { speaker: 'CLARA ASHI', text: "It is, Vlad! They had trouble catching him in the nursery today!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "So what? Lots of kids get hyper and run around and stuff." },
+      { speaker: 'CLARA ASHI', text: "They had to knock him out of the air with a broom!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "I have to go." },
+      { speaker: 'CLARA ASHI', text: "They're going to dock your paychecks!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "They can't do that, I'm a vampire! I don't get paychecks!" },
+      { speaker: 'CLARA ASHI', text: "You work the graveyard shift at the Fry Me Taco! Don't lie to me!" },
+      { speaker: 'TV ANNOUNCER', text: "Oh, the humanity! When will the heartbreak end? Tune in tomorrow to find out!" },
+      { speaker: 'ELIZABETH AFTON', text: "Daddy, just once let me go play with her! She's so pretty and shiny. Didn't you make her just for me?" }
+    ], () => startStoryScene('n3_elev'));
+  }
+
+  // --------------------------------------------------------------------------
+  // 3. NIGHT 3 — CASUAL BONGOS, FLASH BEACON & FUNTIME FREDDY SURGERY
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'n3_elev') {
+    setStage('assets5/cams/elevator_descent.jpg',
+      'NIGHT 3 — ELEVATOR DESCENT ("CASUAL BONGOS")',
+      'Choose your elevator music on the HandUnit keypad');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Welcome back to another pivotal night of your thriving new career, where you get to really ask yourself: What am I doing with my life? And most importantly: Will I ever see my family again?" },
+      { speaker: 'HANDUNIT', text: "Using the keypad below, please type the first few letters of the musical selection you would prefer." }
+    ], () => {
+      showHandUnitKeypad('SELECT MUSIC:', 'CASUAL BONGOS', () => {
+        playDialogueSequence([
+          { speaker: 'HANDUNIT', text: "Thank you for selecting: Casual Bongos. Now that you're thoroughly relaxed, due to your lackluster performance yesterday, your pay has been decreased by a substantial amount." },
+          { speaker: 'HANDUNIT', img: 'assets5/cams/control_module.jpg', text: "It became necessary for technicians to attempt to disconnect Funtime Freddy's power module; however, they were unsuccessful. You will need to reach Parts and Service on the other side of Funtime Auditorium." }
+        ], () => startStoryScene('n3_auditorium'));
+      });
+    });
+  }
+
+  else if (sceneId === 'n3_auditorium') {
+    setStage('assets5/cams/auditorium_dark.jpg',
+      'NIGHT 3 — FUNTIME AUDITORIUM (FLASH BEACON)',
+      'Use your Flash Beacon [⚡ FLASH] before stepping forward! Do not walk while Funtime Foxy Ashi is right in front of you!');
+    const panel = document.getElementById('interactive-panel');
+    panel.style.display = 'flex';
+    let stepsDone = 0;
+    let foxyBlocked = false;
+
+    const renderAudUI = () => {
+      panel.innerHTML = `
+        <div style="font-size:22px; color:#88ddff;">FUNTIME AUDITORIUM CROSSING: ${stepsDone} / 5 STEPS</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${stepsDone * 20}%;"></div></div>
+        <div style="display:flex; gap:10px;">
+          <button class="sl-btn gold" onclick="window.flashBeacon()">⚡ FLASH BEACON (CHECK PATH)</button>
+          <button class="sl-btn" onclick="window.stepAuditorium()">👣 STEP FORWARD</button>
+        </div>
+      `;
+    };
+    renderAudUI();
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Unlike Ballora, Funtime Foxy is motion-activated. You have been provided with a Flash Beacon. Use it sparingly and proceed forward to Parts and Service." }
+    ]);
+
+    window.flashBeacon = () => {
+      playSFX('shock');
+      foxyBlocked = Math.random() < 0.35;
+      document.getElementById('stage-img').src = foxyBlocked
+        ? 'assets5/cams/auditorium_flash_foxy_close.jpg'
+        : 'assets5/cams/auditorium_flash_foxy_far.jpg';
+      setTimeout(() => {
+        if (currentScene === 'n3_auditorium') {
+          document.getElementById('stage-img').src = 'assets5/cams/auditorium_dark.jpg';
+          foxyBlocked = false;
+        }
+      }, 650);
+    };
+
+    window.stepAuditorium = () => {
+      if (foxyBlocked) {
+        triggerSLJumpscare('funtime_foxy.png', 'n3_auditorium');
+        return;
+      }
+      playSFX('beep');
+      stepsDone++;
+      if (stepsDone >= 5) {
+        panel.style.display = 'none';
+        startStoryScene('n3_surgery');
+      } else {
+        renderAudUI();
+      }
+    };
+  }
+
+  else if (sceneId === 'n3_surgery') {
+    setStage('assets5/cams/parts_freddy_closed.jpg',
+      'NIGHT 3 — PARTS & SERVICE (FUNTIME FREDDY ASHI SURGERY)',
+      'Follow HandUnit’s exact 6-step surgical procedure on Funtime Freddy Ashi & Bon-Bon!');
+    const panel = document.getElementById('interactive-panel');
+    panel.style.display = 'flex';
+
+    const surgerySteps = [
+      { btn: '1. Press Button Under RIGHT CHEEK', line: "Locate the small button on Freddy's face, just under his right cheek, and press it." },
+      { btn: '2. Press Button Under LEFT CHEEK',  line: "Great. Now locate the button under his left cheek, and press it." },
+      { btn: '3. Press Button Next to RIGHT EYE', line: "Great. Now carefully locate and press the button next to Freddy's right eye." },
+      { btn: '4. Press Button Above NOSE (Open Faceplates)', line: "Great. Now carefully locate and press the button just above Freddy's nose." },
+      { btn: '5. Press Underside of ENDOSKELETON JAW & Remove Chest Module', line: "Good job! The faceplates should now be open. Press the button under his jaw and remove the primary power module from the chest cavity." },
+      { btn: '6. Press Black Button Beneath BON-BON’S BOWTIE!', line: "Great work. You will now be required to remove the secondary power module from the Bon-Bon hand puppet. Press the large black button beneath Bon-Bon's bowtie!" }
+    ];
+    let sIdx = 0;
+
+    const renderSurgeryStep = () => {
+      const cur = surgerySteps[sIdx];
+      playDialogueSequence([{ speaker: 'HANDUNIT', text: cur.line }]);
+      panel.innerHTML = `
+        <div style="font-size:22px; color:#ff99cc;">SURGERY STEP ${sIdx + 1} OF 6</div>
+        <button class="sl-btn gold" onclick="window.doSurgeryStep()">🔧 ${cur.btn}</button>
+      `;
+    };
+    renderSurgeryStep();
+
+    window.doSurgeryStep = () => {
+      playSFX('beep');
+      sIdx++;
+      if (sIdx === 4) {
+        document.getElementById('stage-img').src = 'assets5/cams/parts_freddy_open.jpg';
+      }
+      if (sIdx >= surgerySteps.length) {
+        panel.style.display = 'none';
+        playDialogueSequence([
+          { speaker: 'HANDUNIT', text: "Great job. You've acquired both power modules. This completes your tasks for the night. Please exit the building through Funtime Auditorium." },
+          { speaker: 'FUNTIME FOXY ASHI', img: 'assets5/cams/auditorium_flash_foxy_close.jpg', sfx: 'scare', text: "[FUNTIME FOXY ASHI AMBUSHES YOU IN FUNTIME AUDITORIUM!]" },
+          { speaker: 'ELIZABETH AFTON', text: "Daddy, she can make balloons! Have you seen her make balloons? Oh, Daddy, let me go to her!" }
+        ], () => startStoryScene('n4_scoop'));
+      } else {
+        renderSurgeryStep();
+      }
+    };
+  }
+
+  // --------------------------------------------------------------------------
+  // 4. NIGHT 4 — INSIDE THE SPRINGLOCK SUIT IN THE SCOOPING ROOM
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'n4_scoop') {
+    setStage('assets5/cams/springlock_baby_talk.jpg',
+      'NIGHT 4 — KIDNAPPED INSIDE THE SPRINGLOCK SUIT (SCOOPING ROOM)',
+      'Listen to Circus Baby Ashi & watch the Technicians bring Ballora Ashi to the Scooper');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'CIRCUS BABY ASHI', text: "Shh, be still and quiet. You've been sleeping for quite a while. I think they noticed that you never left the building last night." },
+      { speaker: 'CIRCUS BABY ASHI', text: "The cameras were searching for you, but they couldn't find you. I have you hidden too well. I kidnapped you." },
+      { speaker: 'CIRCUS BABY ASHI', text: "Don't be afraid, I'm not going to hurt you. I am only going to keep you for a little while. Try not to wiggle, though. You're inside something that came from my old pizzeria." },
+      { speaker: 'CIRCUS BABY ASHI', text: "You're in the Scooping Room. Do you know why they call it the Scooping Room? It's because, dummy, this is the room where they use the Scooper." },
+      { speaker: 'CIRCUS BABY ASHI', text: "Isn't that a fun name for something? The Scooper. It sounds like something you would use for ice cream, or custard, or sprinkles." },
+      { speaker: 'CIRCUS BABY ASHI', text: "Uh-oh, it sounds like someone else is in the building. Shh..." },
+      { speaker: 'TECHNICIANS', img: 'assets5/cams/springlock_ballora_scooped.jpg', text: "Okay, bring her over. Forward, more, more... okay, stop. Set her down. Watch the step. What happened to it this time? Just get her on the rollers so we can go." },
+      { speaker: 'THE SCOOPER', sfx: 'scooper', text: "[CLANG! THE SCOOPER VIOLENTLY STRIKES BALLORA ASHI IN FRONT OF YOUR EYES!]" },
+      { speaker: 'CIRCUS BABY ASHI', img: 'assets5/cams/springlock_baby_talk.jpg', text: "There's something very important that I've learned how to do over time. Do you know what that is? How to pretend. Ballora never learns, but I do." },
+      { speaker: 'CIRCUS BABY ASHI', text: "I'll open the faceplates for you. That way they can find you on the cameras. I'd recommend that you keep the springlocks wound up. Your breathing and your heartbeat are causing them to come loose." }
+    ], () => startStoryScene('n4_springlocks'));
+  }
+
+  else if (sceneId === 'n4_springlocks') {
+    setStage('assets5/cams/springlock_gameplay.jpg',
+      'NIGHT 4 — WIND THE SPRINGLOCKS & SHAKE OFF MINIREENA ASHIS!',
+      'Keep the Springlocks wound above 0% and shake off climbing Minireena Ashis for 20 seconds!');
+    const panel = document.getElementById('interactive-panel');
+    panel.style.display = 'flex';
+    let lockLevel = 90;
+    let miniClimbers = 1;
+    let timeRem = 18;
+
+    const renderLockUI = () => {
+      panel.innerHTML = `
+        <div style="font-size:22px; color:#ffcc66;">⚙️ SPRINGLOCK TENSION: ${Math.floor(lockLevel)}% (${Math.ceil(timeRem)}s UNTIL MORNING)</div>
+        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width:${lockLevel}%;"></div></div>
+        <div style="font-size:18px; color:#ff88aa;">MINIREENA ASHIS CLIMBING SUIT: ${miniClimbers}</div>
+        <div style="display:flex; gap:10px;">
+          <button class="sl-btn gold" onclick="window.windLocks()">🔩 WIND ALL SPRINGLOCKS</button>
+          <button class="sl-btn red" onclick="window.shakeSuit()">📳 WIGGLE SUIT (SHAKE OFF MINIREENAS) [A/D]</button>
+        </div>
+      `;
+    };
+    renderLockUI();
+
+    window.windLocks = () => {
+      playSFX('beep');
+      lockLevel = Math.min(100, lockLevel + 18);
+      renderLockUI();
+    };
+    window.shakeSuit = () => {
+      playSFX('shock');
+      miniClimbers = 0;
+      lockLevel = Math.max(10, lockLevel - 6);
+      renderLockUI();
+    };
+
+    activeTimer = setInterval(() => {
+      if (Math.random() < 0.35) miniClimbers++;
+      lockLevel -= (3.5 + miniClimbers * 2.2);
+      timeRem -= 0.4;
+      if (lockLevel <= 0 || miniClimbers >= 4) {
+        triggerSLJumpscare('minireena.png', 'n4_springlocks');
+        return;
+      }
+      if (timeRem <= 0) {
+        clearTimers();
+        panel.style.display = 'none';
+        startStoryScene('tv_ep3');
+        return;
+      }
+      renderLockUI();
+    }, 400);
+  }
+
+  // --------------------------------------------------------------------------
+  // END OF NIGHT 4 TV CUTSCENE — EPISODE 3 + 8-BIT CIRCUS BABY MINIGAME
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'tv_ep3') {
+    setStage('assets5/cams/tv_immortal_restless.jpg',
+      'CUTSCENE — THE IMMORTAL AND THE RESTLESS (EPISODE 3)',
+      'Watch Episode 3 of Vlad & Clara');
+    setActionButtons(`
+      <button class="sl-btn gold" onclick="playSFX('popcorn')">🍿 EAT POPCORN</button>
+      <button class="sl-btn" onclick="skipDialogueLine()">▶ NEXT LINE [SPACE]</button>
+    `);
+
+    playDialogueSequence([
+      { speaker: 'TV ANNOUNCER', text: "As the moon rises, so also rises the tension between scorned lovers!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Clara, it's not my baby!" },
+      { speaker: 'CLARA ASHI', text: "Vlad, you suck!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Wait, was that a vampire joke? That was so lame, Clara, like I haven't heard that a million times." },
+      { speaker: 'CLARA ASHI', text: "Okay, well how's this: I'm taking the car!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "The joke's on you, it's a rental!" },
+      { speaker: 'CLARA ASHI', text: "Well, the joke's on you! I set the thermostat to 90 before I left!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Good, I like it warm." },
+      { speaker: 'CLARA ASHI', text: "Good, because I also set the house on fire!" },
+      { speaker: 'TV ANNOUNCER', text: "How will it all end? Tune in tomorrow for the exciting conclusion!" },
+      { speaker: 'ELIZABETH AFTON', text: "Daddy isn't watching..." }
+    ], () => startStoryScene('minigame_baby'));
+  }
+
+  // --------------------------------------------------------------------------
+  // 8-BIT CIRCUS BABY ICE CREAM MINIGAME (ELIZABETH AFTON CUTSCENE)
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'minigame_baby') {
+    setStage('assets5/cams/prologue_blueprint.jpg',
+      '8-BIT FLASHBACK — CIRCUS BABY ASHI & ELIZABETH AFTON',
+      'Feed the children cupcakes and return to the start with the Ice Cream!');
+    const cvs = document.getElementById('minigame-canvas');
+    cvs.style.display = 'block';
+    const ctx = cvs.getContext('2d');
+    let fed = 0;
+
+    const draw8Bit = (elizabethHere) => {
+      ctx.fillStyle = '#0c0618';
+      ctx.fillRect(0, 0, 800, 450);
+      // Floor
+      ctx.fillStyle = '#3c1e58';
+      ctx.fillRect(0, 360, 800, 90);
+      // Circus Baby Ashi 8-bit sprite
+      ctx.fillStyle = '#ff2e55';
+      ctx.fillRect(140, 210, 76, 150);
+      ctx.fillStyle = '#ffe0cc';
+      ctx.fillRect(150, 150, 56, 60);
+      ctx.fillStyle = '#44ff66'; // Green eyes before incident!
+      ctx.fillRect(162, 168, 10, 10);
+      ctx.fillRect(184, 168, 10, 10);
+
+      if (!elizabethHere) {
+        // Kids waiting for cupcakes
+        for (let i = 0; i < 3 - fed; i++) {
+          ctx.fillStyle = '#55aaff';
+          ctx.fillRect(420 + i * 110, 260, 46, 100);
+        }
+      } else {
+        // Elizabeth Afton (blonde hair, pink shirt, green bow) approaching Baby for Ice Cream!
+        ctx.fillStyle = '#ffaa22';
+        ctx.fillRect(340, 235, 44, 35);
+        ctx.fillStyle = '#ff55aa';
+        ctx.fillRect(342, 270, 40, 90);
+        // Ice cream cone held by Circus Baby!
+        ctx.fillStyle = '#fff5cc';
+        ctx.fillRect(225, 255, 22, 28);
+      }
+    };
+    draw8Bit(false);
+
+    setActionButtons(`
+      <button class="sl-btn gold" onclick="window.feed8BitChild()">🧁 TOSS CUPCAKE TO CHILDREN (${3 - fed} LEFT)</button>
+      <button class="sl-btn" onclick="startStoryScene('n5_elev')">⏭ SKIP TO NIGHT 5</button>
+    `);
+
+    window.feed8BitChild = () => {
+      playSFX('beep');
+      fed++;
+      if (fed < 3) {
+        draw8Bit(false);
+        setActionButtons(`<button class="sl-btn gold" onclick="window.feed8BitChild()">🧁 TOSS CUPCAKE TO CHILDREN (${3 - fed} LEFT)</button>`);
+      } else {
+        draw8Bit(true);
+        setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+        playDialogueSequence([
+          { speaker: 'ELIZABETH AFTON', text: "Don't tell Daddy that I'm here. I wanted to watch your show, too. I don't know why he won't let me come see you. You're wonderful!" },
+          { speaker: 'ELIZABETH AFTON', text: "Where did the other children go?" },
+          { speaker: 'CIRCUS BABY ASHI', sfx: 'scooper', text: "[CIRCUS BABY DISPENSES ICE CREAM — INTERNAL CLAW SNAPS SHUT!]" }
+        ], () => {
+          cvs.style.display = 'none';
+          startStoryScene('n5_elev');
+        });
+      }
+    };
+  }
+
+  // --------------------------------------------------------------------------
+  // 5. NIGHT 5 — EXOTIC BUTTERS, HANGING TECHNICIANS, BABY PASSCODE & TWO ENDINGS!
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'n5_elev') {
+    setStage('assets5/cams/elevator_descent.jpg',
+      'NIGHT 5 — ELEVATOR DESCENT ("EXOTIC BUTTERS")',
+      'Select your one-week bonus gift basket on the HandUnit keypad');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Welcome back to your last day on the job! That is, the last day of your first week. You've earned your one-week bonus in the form of a delightful gift basket." },
+      { speaker: 'HANDUNIT', text: "Using the keypad below, please enter the first few letters of the gift basket you would like to receive." }
+    ], () => {
+      showHandUnitKeypad('GIFT BASKET:', 'EXOTIC BUTTERS', () => {
+        playDialogueSequence([
+          { speaker: 'HANDUNIT', text: "It seems you had some trouble with the keypad. I see what you were trying to type, and I will auto-correct it for you. Thank you for selecting: Exotic Butters." },
+          { speaker: 'HANDUNIT', text: "Please be aware that there are still two technicians on site today. Try to avoid interfering with their work if possible." },
+          { speaker: 'HANDUNIT', img: 'assets5/cams/ballora_window_tech.jpg', sfx: 'shock', text: "Let's check on Ballora and make sure she's on her stage... Great." },
+          { speaker: 'HANDUNIT', img: 'assets5/cams/foxy_window_tech.jpg', sfx: 'shock', text: "Now let's check on Funtime Foxy... Great. It looks like everything is as it should be. Proceed through Funtime Auditorium to Parts and Service." }
+        ], () => startStoryScene('n5_parts'));
+      });
+    });
+  }
+
+  else if (sceneId === 'n5_parts') {
+    setStage('assets5/cams/parts_baby_night5.jpg',
+      'NIGHT 5 — PARTS & SERVICE (CIRCUS BABY ASHI PASSCODE)',
+      'Listen to Circus Baby Ashi & enter her passcode carefully');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Great job reaching Parts and Service. Circus Baby has been deactivated for an unknown reason." },
+      { speaker: 'CIRCUS BABY ASHI', text: "Can you hear me? I'm pretending. Remember how I said I could pretend? The cameras are watching. I must be careful not to move." },
+      { speaker: 'CIRCUS BABY ASHI', text: "There is something bad inside of me. I'm broken. I can't be fixed. I'm going to be taken to the Scooping Room soon, but it's not going to fix what's wrong with me." },
+      { speaker: 'CIRCUS BABY ASHI', text: "Will you help me? I want you to save what is good, so the rest can be destroyed and never recovered. But you must be careful. Ballora is here, in the room with us." },
+      { speaker: 'CIRCUS BABY ASHI', text: "There is a passcode that you must enter before you can retrieve me. Enter the code carefully: 8 - 5 - 8 - 1 - 8." }
+    ], () => {
+      const panel = document.getElementById('interactive-panel');
+      panel.style.display = 'flex';
+      panel.innerHTML = `
+        <div style="font-size:22px; color:#75ff90;">🔐 CIRCUS BABY CHEEK PASSCODE: 8 - 5 - 8 - 1 - 8</div>
+        <button class="sl-btn gold" onclick="window.finishBabyCode()">🔢 ENTER PASSCODE [85818] & TAKE COMMUNICATOR CARD</button>
+      `;
+      window.finishBabyCode = () => {
+        playSFX('beep');
+        panel.style.display = 'none';
+        playDialogueSequence([
+          { speaker: 'CIRCUS BABY ASHI', text: "Good. A hatch should have opened. Take the card that you find inside. Now press the green button to your left. This will send me to the Scooping Room." },
+          { speaker: 'CIRCUS BABY ASHI', img: 'assets5/cams/auditorium_dark.jpg', text: "You must follow my instructions in Funtime Auditorium. Ballora is going to follow you. I will help you avoid her." },
+          { speaker: 'CIRCUS BABY ASHI', text: "Go forward... Stop. Be silent... Stop. She is right in front of you. Don't move. He is here to help, Ballora. He is not here to hurt us." },
+          { speaker: 'CIRCUS BABY ASHI', text: "CRITICAL CHOICE: Turn LEFT [Go Forward & Left] to follow Baby into the SCOOPING ROOM (Real Ending), OR turn RIGHT [Go Forward & Right] to disobey Baby and enter the PRIVATE ROOM (Fake Ending Boss Fight)!" }
+        ], () => {
+          setActionButtons(`
+            <button class="sl-btn red" onclick="startStoryScene('n5_real_ending')">🩸 TURN LEFT: SCOOPING ROOM (REAL ENDING)</button>
+            <button class="sl-btn gold" onclick="startStoryScene('n5_private_room')">🧈 TURN RIGHT: PRIVATE ROOM (FAKE ENDING / ENNARD BOSS)</button>
+          `);
+        });
+      };
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // 6A. NIGHT 5 REAL ENDING — THE SCOOPING ROOM + BATHROOM MIRROR CUTSCENE
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'n5_real_ending') {
+    setStage('assets5/cams/scooping_room_ennard.jpg',
+      'REAL ENDING — THE SCOOPING ROOM',
+      'Face Ennard Ashi behind the glass window of the Scooping Room');
+    setActionButtons(`<button class="sl-btn" onclick="skipDialogueLine()">▶ CONTINUE DIALOGUE [SPACE]</button>`);
+
+    playDialogueSequence([
+      { speaker: 'FACILITY AI', text: "Warning: You've entered a highly dangerous area. You have entered from Maintenance Hatch 1B, reserved for cleaning and repair of the Scooper." },
+      { speaker: 'ENNARD ASHI (BABY’S VOICE)', text: "You are in the Scooping Room now. Funtime Foxy has already been here today. Funtime Freddy has already been here today. Ballora has already been here today. Circus Baby has already been here today." },
+      { speaker: 'ENNARD ASHI', text: "I've been out before, but they always put me back. They always put us back inside. There's nowhere for us to hide here. There is nowhere to go, when we look like this." },
+      { speaker: 'ENNARD ASHI', text: "But if we looked like you, then we could hide. If we looked like you, then we would have somewhere to go." },
+      { speaker: 'ENNARD ASHI', text: "The Scooper only hurts for a moment." },
+      { speaker: 'THE SCOOPER', sfx: 'scooper', text: "[SIREN BLARES — CLANG! THE SCOOPER STRIKES!]" },
+      { speaker: 'REAL ENDING CUTSCENE', img: 'assets5/cams/ending_bathroom_mirror.jpg', sfx: 'musicbox', text: "[FINAL CUTSCENE: Inside the purple-lit bathroom, your silhouette walks up to the mirror, smiles, and glowing purple Ennard-Ashi eyes light up in the reflection!]" }
+    ], () => {
+      localStorage.setItem('fnaasl_real', '1');
+      setActionButtons(`
+        <button class="sl-btn gold" onclick="startStoryScene('n5_private_room')">🧈 NOW PLAY FAKE ENDING (PRIVATE ROOM BOSS + TV EPISODE 4)</button>
+        <button class="sl-btn" onclick="returnToMenu()">🏠 RETURN TO TITLE SCREEN</button>
+      `);
+    });
+  }
+
+  // --------------------------------------------------------------------------
+  // 6B. NIGHT 5 FAKE ENDING — PRIVATE ROOM (ENNARD ASHI BOSS FIGHT) + TV EPISODE 4
+  // --------------------------------------------------------------------------
+  else if (sceneId === 'n5_private_room') {
+    setStage('assets5/cams/private_room_office.jpg',
+      'FAKE ENDING — PRIVATE ROOM (ENNARD ASHI BOSS FIGHT 12 AM – 6 AM)',
+      'Survive Ennard Ashi until 6 AM using Left Door [A], Top Vent [W], and Right Door [D]!');
+
+    const panel = document.getElementById('interactive-panel');
+    panel.style.display = 'flex';
+    let prHour = 0; // 0=12AM..6=6AM
+    let prPower = 100;
+    let prElapsed = 0;
+    let ennardSide = 'none'; // 'none' | 'left' | 'right' | 'vent'
+    let doorClosed = 'none'; // 'none' | 'left' | 'right' | 'vent'
+
+    const ennardLines = [
+      { spk: 'HANDUNIT', txt: "It seems that you have accidentally wandered into a restricted area. You will not be allowed to leave until the cleanup crew arrives at 6:00 AM. Hang tight!" },
+      { spk: 'ENNARD ASHI', txt: "Why didn't you trust me? Why didn't you believe me? I thought you liked me." },
+      { spk: 'ENNARD ASHI', txt: "We don't want to hurt anyone, but we need you. We need you so that we can leave. We need you so that we can look like you." },
+      { spk: 'ENNARD ASHI (ELIZABETH’S VOICE)', txt: "Isn't this why you came here? To be with her again? I know I was an accident... Everything is okay, I'm still here." },
+      { spk: 'ENNARD ASHI', txt: "You won't die, and it will only hurt for a moment. I will find a way out." }
+    ];
+    playDialogueSequence([ennardLines[0]]);
+
+    const renderPrivateUI = () => {
+      const hrTxt = prHour === 0 ? '12 AM' : `${prHour} AM`;
+      panel.innerHTML = `
+        <div style="display:flex; justify-content:space-between; width:100%; font-size:24px;">
+          <span style="color:#75ff90;">🔋 POWER: ${Math.max(0, Math.floor(prPower))}%</span>
+          <span style="color:#ffcc33;">🕒 ${hrTxt} (SURVIVE TO 6 AM)</span>
+        </div>
+        <div style="font-size:19px; color:${ennardSide === 'none' ? '#88ccff' : '#ff4455'};">
+          📡 CAMERA MONITOR: ${ennardSide === 'none' ? 'Ennard Moving in Shadows' : `⚠️ ENNARD ASHI AT ${ennardSide.toUpperCase()}! CLOSE ${ennardSide.toUpperCase()} DOOR!`}
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center;">
+          <button class="sl-btn ${doorClosed === 'left' ? 'active' : ''}" onclick="window.togglePrDoor('left')">🚪 LEFT DOOR [A]</button>
+          <button class="sl-btn ${doorClosed === 'vent' ? 'active' : ''}" onclick="window.togglePrDoor('vent')">🪟 TOP VENT [W]</button>
+          <button class="sl-btn ${doorClosed === 'right' ? 'active' : ''}" onclick="window.togglePrDoor('right')">🚪 RIGHT DOOR [D]</button>
+        </div>
+      `;
+    };
+    renderPrivateUI();
+
+    window.togglePrDoor = (side) => {
+      playSFX('beep');
+      doorClosed = (doorClosed === side) ? 'none' : side;
+      if (doorClosed === ennardSide && ennardSide !== 'none') {
+        playSFX('shock');
+        ennardSide = 'none';
+        document.getElementById('stage-img').src = 'assets5/cams/private_room_office.jpg';
+      }
+      renderPrivateUI();
+    };
+
+    activeTimer = setInterval(() => {
+      prElapsed += 0.5;
+      prPower -= (doorClosed === 'none' ? 0.35 : 0.95);
+      const newHr = Math.min(6, Math.floor(prElapsed / 6));
+      if (newHr !== prHour) {
+        prHour = newHr;
+        if (prHour <= 4) playDialogueSequence([ennardLines[prHour]]);
+      }
+
+      if (prHour >= 6) {
+        clearTimers();
+        panel.style.display = 'none';
+        startStoryScene('tv_ep4_fake_ending');
+        return;
+      }
+
+      if (prPower <= 0) {
+        triggerSLJumpscare('ennard.png', 'n5_private_room');
+        return;
+      }
+
+      if (ennardSide === 'none' && Math.random() < 0.32) {
+        const sides = ['left', 'right', 'vent'];
+        ennardSide = sides[Math.floor(Math.random() * sides.length)];
+        if (doorClosed === ennardSide) {
+          ennardSide = 'none';
+        } else {
+          document.getElementById('stage-img').src =
+            ennardSide === 'left' ? 'assets5/cams/private_room_ennard_left.jpg' :
+            (ennardSide === 'right' ? 'assets5/cams/private_room_ennard_right.jpg' : 'assets5/cams/private_room_ennard_vent.jpg');
+        }
+      } else if (ennardSide !== 'none' && doorClosed !== ennardSide && Math.random() < 0.25) {
+        triggerSLJumpscare('ennard.png', 'n5_private_room');
+        return;
+      }
+      renderPrivateUI();
+    }, 500);
+  }
+
+  else if (sceneId === 'tv_ep4_fake_ending') {
+    setStage('assets5/cams/tv_immortal_restless.jpg',
+      'FAKE ENDING CUTSCENE — SEASON FINALE (EPISODE 4) + ENNARD IN LIVING ROOM',
+      'Watch the Season Finale of The Immortal and the Restless with your Exotic Butters!');
+    setActionButtons(`
+      <button class="sl-btn gold" onclick="playSFX('popcorn')">🍿 EAT POPCORN</button>
+      <button class="sl-btn" onclick="skipDialogueLine()">▶ NEXT LINE [SPACE]</button>
+    `);
+
+    playDialogueSequence([
+      { speaker: 'TV ANNOUNCER', text: "As the trees sway in the wind, so also do emotions sway between star-crossed lovers!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "You burned down my house!" },
+      { speaker: 'CLARA ASHI', text: "You call that a house? It was like a morgue in there!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "I may be undead, but you're heartless!" },
+      { speaker: 'CLARA ASHI', text: "You need to see your son!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "The baby isn't mine!" },
+      { speaker: 'CLARA ASHI', text: "He ate the cat!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Sounds like something he got from your side of the family!" },
+      { speaker: 'CLARA ASHI', text: "Well, how's this: I'm keeping the diamond ring!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "The joke's on you, I found it in a kids' meal!" },
+      { speaker: 'CLARA ASHI', text: "You bought a kids' meal? Oh, Vlad!" },
+      { speaker: 'VLAD (VAMPIRE ASHI)', text: "Clara!" },
+      { speaker: 'TV ANNOUNCER', text: "As the hair on the back of a cat stands up straight, so also does the love between Vlad and Clara stand up against all obstacles! Stay tuned next season!" },
+      { speaker: 'FAKE ENDING', img: 'assets5/cams/tv_ennard_fake_ending.jpg', sfx: 'musicbox', text: "[THE TV TURNS OFF... AND ENNARD ASHI SLOWLY DRAGS HERSELF INTO YOUR LIVING ROOM NEXT TO YOUR EXOTIC BUTTERS!]" }
+    ], () => {
+      setActionButtons(`
+        <button class="sl-btn red" onclick="startStoryScene('n5_real_ending')">🩸 WATCH REAL ENDING (SCOOPER + MIRROR)</button>
+        <button class="sl-btn" onclick="returnToMenu()">🏠 RETURN TO TITLE SCREEN</button>
+      `);
+    });
+  }
+}
+
+// ============================================================================
+// NIGHT 1 CONTROL MODULE LIGHT & SHOCK HANDLERS
+// ============================================================================
+function ctrlLight(target) {
+  playSFX('beep');
+  if (target === 'left') {
+    document.getElementById('stage-img').src = window.n1State.balloraFixed
+      ? 'assets5/cams/ballora_window_stage.jpg'
+      : 'assets5/cams/ballora_window_empty.jpg';
+    if (!window.n1State.balloraFixed) {
+      playDialogueSequence([
+        { speaker: 'HANDUNIT', text: "Uh-oh! It looks like Ballora doesn't feel like dancing. Let's give her some motivation. Press the RED SHOCK button now to administer a Controlled Shock." }
+      ]);
+    } else {
+      playDialogueSequence([
+        { speaker: 'HANDUNIT', text: "Excellent! Ballora Ashi is feeling like her old self again and will be ready to perform tomorrow. Now check Funtime Foxy on the RIGHT window!" }
+      ]);
+      checkNight1ControlDone();
+    }
+  } else if (target === 'right') {
+    document.getElementById('stage-img').src = window.n1State.foxyFixed
+      ? 'assets5/cams/foxy_window_stage.jpg'
+      : 'assets5/cams/foxy_window_empty.jpg';
+    if (!window.n1State.foxyFixed) {
+      playDialogueSequence([
+        { speaker: 'HANDUNIT', text: "Looks like Funtime Foxy is taking the day off. Let's motivate Funtime Foxy with a Controlled Shock!" }
+      ]);
+    } else {
+      playDialogueSequence([
+        { speaker: 'HANDUNIT', text: "Looks like Funtime Foxy Ashi is in perfect working order! Great job!" }
+      ]);
+      checkNight1ControlDone();
+    }
+  } else if (target === 'circus') {
+    document.getElementById('stage-img').src = 'assets5/cams/circus_control_lit.jpg';
+    setTimeout(() => {
+      if (currentScene === 'n1_circus') document.getElementById('stage-img').src = 'assets5/cams/circus_control.jpg';
+    }, 700);
+  }
+}
+
+function ctrlShock(target) {
+  playSFX('shock');
+  if (target === 'left') {
+    window.n1State.balloraFixed = true;
+    document.getElementById('stage-img').src = 'assets5/cams/ballora_window_dark.jpg';
+    playDialogueSequence([
+      { speaker: 'HANDUNIT', text: "Let's check the Left Light again to verify Ballora is back on stage!" }
+    ]);
+  } else if (target === 'right') {
+    window.n1State.foxyShocks++;
+    document.getElementById('stage-img').src = 'assets5/cams/foxy_window_dark.jpg';
+    if (window.n1State.foxyShocks < 2) {
+      playDialogueSequence([{ speaker: 'HANDUNIT', text: "Let's try another Controlled Shock on Funtime Foxy!" }]);
+    } else {
+      window.n1State.foxyFixed = true;
+      playDialogueSequence([{ speaker: 'HANDUNIT', text: "Now check the Right Light again to verify Funtime Foxy is on stage!" }]);
+    }
+  } else if (target === 'circus') {
+    window.n1CircusShocks = (window.n1CircusShocks || 0) + 1;
+    if (window.n1CircusShocks < 3) {
+      playDialogueSequence([
+        { speaker: 'HANDUNIT', text: `Controlled Shock ${window.n1CircusShocks}/3 administered. Let's try another Controlled Shock!` }
+      ]);
+    } else {
+      document.getElementById('ctrl-pads').style.display = 'none';
+      playDialogueSequence([
+        { speaker: 'HANDUNIT', text: "Great job, Circus Baby, we knew we could count on you! That concludes your duties for your first night on the job. Please leave using the vent behind you, and we'll see you again tomorrow." }
+      ], () => startStoryScene('tv_ep1'));
+    }
+  }
+}
+
+function checkNight1ControlDone() {
+  if (window.n1State && window.n1State.balloraFixed && window.n1State.foxyFixed) {
+    setActionButtons(`
+      <button class="sl-btn gold" onclick="startStoryScene('n1_circus')">▲ CRAWL THROUGH FRONT VENT TO CIRCUS GALLERY</button>
+    `);
+  }
+}
+
+// Keyboard Shortcuts
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === ' ') {
+    if (document.getElementById('dialogue-box').style.display === 'block') {
+      e.preventDefault();
+      skipDialogueLine();
+    } else if (currentScene === 'n2_desk' && window.pullDeskDoor) {
+      e.preventDefault();
+      window.pullDeskDoor();
+    }
+  } else if (currentScene === 'n4_springlocks' && (k === 'a' || k === 'd') && window.shakeSuit) {
+    window.shakeSuit();
+  } else if (currentScene === 'n5_private_room' && window.togglePrDoor) {
+    if (k === 'a') window.togglePrDoor('left');
+    else if (k === 'w') window.togglePrDoor('vent');
+    else if (k === 'd') window.togglePrDoor('right');
+  }
+});
+</script>
+</body>
+</html>
