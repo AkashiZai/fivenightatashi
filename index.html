@@ -779,6 +779,9 @@
       <div class="menu-btn" onclick="openCustomNight()">
         <span class="arrow">&gt;&gt;</span> Custom Night
       </div>
+      <div class="menu-btn" style="color:#ffdd55;" onclick="openFnaf1EasterEggs()">
+        <span class="arrow">&gt;&gt;</span> &#x1F95A; Easter Eggs &amp; Secrets
+      </div>
 
       <div style="margin-top:10px;font-size:13px;color:#888;">QUICK SELECT NIGHT (100% ORIGINAL FNAF 1 AI):</div>
       <div class="night-select-row">
@@ -993,6 +996,7 @@
       <button class="tool-pill" id="btn-speed" onclick="toggleSpeedMode()" title="Switch between authentic 89s/hr and 3x fast 30s/hr">Speed: 1x (89s/hr)</button>
       <button class="tool-pill" id="btn-radar" onclick="toggleRadar()" title="Show live FNaF 1 AI movement timers & positions">AI Radar: OFF</button>
       <button class="tool-pill" onclick="triggerGoldenFreddyPoster()" title="Test Golden Freddy apparition on CAM 2B">Summon Golden</button>
+      <button class="tool-pill" style="border-color:#ffdd55;color:#ffdd55;" onclick="openFnaf1EasterEggs()">&#x1F95A; Easter Eggs</button>
     </div>
     <div id="ai-debug-box"></div>
 
@@ -1030,6 +1034,42 @@
   <div id="jumpscare-layer">
     <img id="jumpscare-bg" src="assets/cams/office_normal.jpg" alt="BG">
     <img id="jumpscare-char" src="assets/sprites/bonnie.png" alt="Jumpscare">
+  </div>
+
+  <!-- FNAF 1 EASTER EGGS MODAL -->
+  <div id="fnaf1-ee-modal" style="position:absolute;inset:0;z-index:88;background:rgba(5,5,8,0.95);display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;font-family:'Share Tech Mono',monospace;">
+    <h2 style="color:#ffdd55;font-size:28px;letter-spacing:2px;margin-bottom:10px;">&#x1F95A; FIVE NIGHTS AT ASHI 1 — ALL EASTER EGGS &amp; LORE SECRETS</h2>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:920px;width:95%;">
+      <div style="background:#111;border:2px solid #555;padding:12px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:17px;">1. Celebrate! Poster Nose Honk</div>
+        <div style="color:#aaa;font-size:13px;margin:4px 0;">Click Freddy Ashi's nose on the Office "CELEBRATE!" poster to trigger the iconic bicycle horn sound!</div>
+        <button class="tool-pill" style="margin-top:6px;color:#fff;" onclick="closeFnaf1EasterEggs();honkNose();">&#x1F4EF; Trigger Nose Honk</button>
+      </div>
+      <div style="background:#111;border:2px solid #555;padding:12px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:17px;">2. Custom Night 1 / 9 / 8 / 7 (Bite of '87)</div>
+        <div style="color:#aaa;font-size:13px;margin:4px 0;">Setting Custom Night AI to 1-9-8-7 triggers an instant Golden Freddy Ashi crash jumpscare!</div>
+        <button class="tool-pill" style="margin-top:6px;color:#fff;" onclick="closeFnaf1EasterEggs();trigger1987EasterEgg();">&#x1F480; Trigger 1/9/8/7 Jumpscare</button>
+      </div>
+      <div style="background:#111;border:2px solid #555;padding:12px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:17px;">3. "IT'S ME" &amp; Eyeless Bonnie Hallucinations</div>
+        <div style="color:#aaa;font-size:13px;margin:4px 0;">Rapid screen flashes of "IT'S ME", Eyeless Bonnie Ashi, and Golden Freddy Ashi with robotic static!</div>
+        <button class="tool-pill" style="margin-top:6px;color:#fff;" onclick="closeFnaf1EasterEggs();triggerHallucinationFlash();">&#x1F441; Trigger "IT'S ME" Hallucination</button>
+      </div>
+      <div style="background:#111;border:2px solid #555;padding:12px;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:17px;">4. CAM 2B Golden Freddy Poster &amp; Office Spawn</div>
+        <div style="color:#aaa;font-size:13px;margin:4px 0;">Changes the West Hall Corner poster to Golden Freddy and spawns him inside your Office when you lower the monitor!</div>
+        <button class="tool-pill" style="margin-top:6px;color:#fff;" onclick="closeFnaf1EasterEggs();triggerGoldenFreddyPoster();">&#x1F43B; Spawn Golden Freddy Ashi</button>
+      </div>
+      <div style="background:#111;border:2px solid #555;padding:12px;grid-column:span 2;">
+        <div style="color:#ffdd55;font-weight:bold;font-size:17px;">5. CAM 4B Missing Children Incident Newspaper Clippings</div>
+        <div style="color:#ccc;font-size:12px;margin-top:4px;line-height:1.45;" id="fnaf1-news-text">
+          <b>CLIPPING #1:</b> "KIDS VANISH AT LOCAL PIZZERIA — BODIES NOT FOUND. Two local children were reportedly lured into a back room during the late hours of operation on June 26th..."<br>
+          <b>CLIPPING #2:</b> "FIVE CHILDREN NOW REPORTED MISSING. Suspect convicted; security cameras captured a man dressed in a mascot suit leading five children into a back room..."<br>
+          <b>CLIPPING #3:</b> "LOCAL PIZZERIA THREATENED WITH SHUTDOWN OVER SANITATION. Parents complained of blood and mucus around the eyes and mouths of the mascots, calling them 'reanimated carcasses'..."
+        </div>
+      </div>
+    </div>
+    <button class="tool-pill" style="margin-top:14px;background:#882222;color:#fff;font-size:16px;padding:6px 20px;" onclick="closeFnaf1EasterEggs()">&#x2716; Close</button>
   </div>
 </div>
 
@@ -2271,6 +2311,17 @@ function returnToMenu() {
   document.getElementById('cam-screen').style.display = 'none';
   document.getElementById('title-screen').style.display = 'flex';
   staticCanvas.style.opacity = '0.18';
+}
+
+function openFnaf1EasterEggs() {
+  document.getElementById('fnaf1-ee-modal').style.display = 'flex';
+}
+function closeFnaf1EasterEggs() {
+  document.getElementById('fnaf1-ee-modal').style.display = 'none';
+}
+function trigger1987EasterEgg() {
+  customAI = { freddy: 1, bonnie: 9, chica: 8, foxy: 7 };
+  triggerGoldenCrash();
 }
 </script>
 </body>
